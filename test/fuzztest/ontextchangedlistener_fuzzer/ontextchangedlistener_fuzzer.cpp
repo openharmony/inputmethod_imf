@@ -13,10 +13,15 @@
  * limitations under the License.
  */
 
-#define private public
-#define protected public
+#define PRIVATE public
+#define PROTECTED public
+#define private PRIVATE
+#define protected PROTECTED
 #include "input_method_controller.h"
 #undef private
+#undef protected
+#undef PRIVATE
+#undef PROTECTED
 
 #include "ontextchangedlistener_fuzzer.h"
 
