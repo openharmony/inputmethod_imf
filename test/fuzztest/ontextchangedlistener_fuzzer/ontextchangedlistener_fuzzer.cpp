@@ -13,11 +13,7 @@
  * limitations under the License.
  */
 
-#define PRIVATE public
-#define PROTECTED public
 #include "input_method_controller.h"
-#undef PRIVATE
-#undef PROTECTED
 
 #include "ontextchangedlistener_fuzzer.h"
 
@@ -70,13 +66,11 @@ private:
 void FuzzFinishTextPreview(sptr<FuzzTextListener> listener)
 {
     listener->FinishTextPreview();
-    listener->FinishTextPreviewV2();
 }
 
 void FuzzOnDetach(sptr<FuzzTextListener> listener)
 {
     listener->OnDetach();
-    listener->OnDetachV2();
 }
 
 void FuzzIsFromTs(sptr<FuzzTextListener> listener, FuzzedDataProvider &provider)
@@ -102,14 +96,12 @@ void FuzzNotifyPanelStatusInfo(sptr<FuzzTextListener> listener, FuzzedDataProvid
     panelStatusInfo.visible = fuzzedBool;
     panelStatusInfo.trigger = Trigger::IME_APP;
     listener->NotifyPanelStatusInfo(panelStatusInfo);
-    listener->NotifyPanelStatusInfoV2(panelStatusInfo);
 }
 
 void FuzzNotifyKeyboardHeight(sptr<FuzzTextListener> listener, FuzzedDataProvider &provider)
 {
     auto fuzzedHeight = provider.ConsumeIntegral<uint32_t>();
     listener->NotifyKeyboardHeight(fuzzedHeight);
-    listener->NotifyKeyboardHeightV2(fuzzedHeight);
 }
 
 void FuzzReceivePrivateCommand(sptr<FuzzTextListener> listener, FuzzedDataProvider &provider)
@@ -124,7 +116,6 @@ void FuzzReceivePrivateCommand(sptr<FuzzTextListener> listener, FuzzedDataProvid
     privateCommand.emplace("value2", privateDataValue2);
     privateCommand.emplace("value3", privateDataValue3);
     listener->ReceivePrivateCommand(privateCommand);
-    listener->ReceivePrivateCommandV2(privateCommand);
 }
 
 void FuzzSetPreviewText(sptr<FuzzTextListener> listener, FuzzedDataProvider &provider)
@@ -135,7 +126,6 @@ void FuzzSetPreviewText(sptr<FuzzTextListener> listener, FuzzedDataProvider &pro
     auto fuzzedEnd = provider.ConsumeIntegral<int32_t>();
     Range range = { .start = fuzzedStart, .end = fuzzedEnd };
     listener->SetPreviewText(fuzzedU16String, range);
-    listener->SetPreviewTextV2(fuzzedU16String, range);
 }
 
 void FuzzInputMethodControllerWithListener(sptr<InputMethodController> imc,
@@ -145,14 +135,6 @@ void FuzzInputMethodControllerWithListener(sptr<InputMethodController> imc,
     std::u16string fuzzedU16String(fuzzedString.begin(), fuzzedString.end());
     auto fuzzInt32 = provider.ConsumeIntegral<int32_t>();
     auto fuzzBool = provider.ConsumeBool();
-    
-    imc->clientInfo_.state = ClientState::ACTIVE;
-    imc->SetTextListener(listener);
-    imc->GetTextListener();
-    imc->isEditable_.store(true);
-    imc->isBound_.store(true);
-    imc->IsEditable();
-    imc->IsBound();
 
     imc->InsertText(fuzzedU16String);
     imc->DeleteForward(fuzzInt32);
@@ -176,7 +158,7 @@ void FuzzInputMethodControllerWithListener(sptr<InputMethodController> imc,
     imc->ReceivePrivateCommand(privateCommand);
 }
 
-void FuzzOnTextChangedListenerV2Methods(FuzzedDataProvider &provider)
+void FuzzOnTextChangedListenerMethods(FuzzedDataProvider &provider)
 {
     std::string fuzzedString = provider.ConsumeRandomLengthString();
     std::u16string fuzzedU16String(fuzzedString.begin(), fuzzedString.end());
@@ -184,30 +166,30 @@ void FuzzOnTextChangedListenerV2Methods(FuzzedDataProvider &provider)
     auto fuzzBool = provider.ConsumeBool();
     
     std::shared_ptr<AppExecFwk::EventRunner> runner =
-        AppExecFwk::EventRunner::Create("fuzzV2Handler");
+        AppExecFwk::EventRunner::Create("fuzzHandler");
     auto handler = std::make_shared<AppExecFwk::EventHandler>(runner);
-    sptr<FuzzTextListener> v2Listener =
+    sptr<FuzzTextListener> listener =
         new (std::nothrow) FuzzTextListener(handler);
-    if (v2Listener == nullptr) {
+    if (listener == nullptr) {
         return;
     }
     
-    v2Listener->InsertTextV2(fuzzedU16String);
-    v2Listener->DeleteForwardV2(fuzzInt32);
-    v2Listener->DeleteBackwardV2(fuzzInt32);
-    v2Listener->SendKeyboardStatusV2(KeyboardStatus::SHOW);
+    listener->InsertText(fuzzedU16String);
+    listener->DeleteForward(fuzzInt32);
+    listener->DeleteBackward(fuzzInt32);
+    listener->SendKeyboardStatus(KeyboardStatus::SHOW);
     FunctionKey functionKey;
-    v2Listener->SendFunctionKeyV2(functionKey);
-    v2Listener->MoveCursorV2(Direction::DOWN);
-    v2Listener->HandleExtendActionV2(fuzzInt32);
-    v2Listener->GetLeftTextOfCursorV2(fuzzInt32);
-    v2Listener->GetRightTextOfCursorV2(fuzzInt32);
-    v2Listener->GetTextIndexAtCursorV2();
+    listener->SendFunctionKey(functionKey);
+    listener->MoveCursor(Direction::DOWN);
+    listener->HandleExtendAction(fuzzInt32);
+    listener->GetLeftTextOfCursor(fuzzInt32);
+    listener->GetRightTextOfCursor(fuzzInt32);
+    listener->GetTextIndexAtCursor();
     KeyEvent keyEvent;
-    v2Listener->SendKeyEventFromInputMethodV2(keyEvent);
-    v2Listener->SetKeyboardStatusV2(fuzzBool);
-    v2Listener->HandleSetSelectionV2(fuzzInt32, fuzzInt32);
-    v2Listener->HandleSelectV2(fuzzInt32, fuzzInt32);
+    listener->SendKeyEventFromInputMethod(keyEvent);
+    listener->SetKeyboardStatus(fuzzBool);
+    listener->HandleSetSelection(fuzzInt32, fuzzInt32);
+    listener->HandleSelect(fuzzInt32, fuzzInt32);
 }
 
 } // namespace OHOS
@@ -243,6 +225,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::FuzzNotifyKeyboardHeight(listener, provider);
     OHOS::FuzzReceivePrivateCommand(listener, provider);
     OHOS::FuzzSetPreviewText(listener, provider);
-    OHOS::FuzzOnTextChangedListenerV2Methods(provider);
+    OHOS::FuzzOnTextChangedListenerMethods(provider);
     return OHOS::FUZZER_SUCCESS;
 }
