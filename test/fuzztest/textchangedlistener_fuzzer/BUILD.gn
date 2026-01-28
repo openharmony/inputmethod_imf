@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Copyright (c) 2026 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -19,11 +19,11 @@ import("//build/ohos.gni")
 import("//build/test.gni")
 
 ##############################fuzztest##########################################
-ohos_fuzztest("ListenerApisFuzzTest") {
+ohos_fuzztest("TextChangedListenerFuzzTest") {
   module_out_path = "imf/imf"
 
   fuzz_config_file =
-      "${inputmethod_path}/test/fuzztest/listenerapis_fuzzer"
+      "${inputmethod_path}/test/fuzztest/textchangedlistener_fuzzer"
 
   include_dirs = [
     "${inputmethod_path}/common/include",
@@ -42,7 +42,7 @@ ohos_fuzztest("ListenerApisFuzzTest") {
 
   configs = [ "${inputmethod_path}/interfaces/inner_api/inputmethod_controller:inputmethod_client_native_public_config" ]
 
-  sources = [ "listenerapis_fuzzer.cpp" ]
+  sources = [ "textchangedlistener_fuzzer.cpp" ]
 
   deps = [
     "${inputmethod_path}/interfaces/inner_api/inputmethod_ability:inputmethod_ability_static",
@@ -61,7 +61,6 @@ ohos_fuzztest("ListenerApisFuzzTest") {
 group("fuzztest") {
   testonly = true
   deps = []
-  deps += [ ":ListenerApisFuzzTest" ]
+  deps += [ ":TextChangedListenerFuzzTest" ]
 }
 ###############################################################################
-

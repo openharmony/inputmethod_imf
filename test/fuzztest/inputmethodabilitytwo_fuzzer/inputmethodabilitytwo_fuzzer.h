@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,10 +13,9 @@
  * limitations under the License.
  */
 
-#ifndef INPUTMETHOD_IMF_LISTENERAPIS_FUZZER_H
-#define INPUTMETHOD_IMF_LISTENERAPIS_FUZZER_H
+#ifndef INPUTMETHOD_IMF_CHOOSEDIALOG_INPUTMETHODABILITYTWO_FUZZER_H
+#define INPUTMETHOD_IMF_CHOOSEDIALOG_INPUTMETHODABILITYTWO_FUZZER_H
 
-#define FUZZ_PROJECT_NAME "listenerapis_fuzzer"
+#define FUZZ_PROJECT_NAME "inputmethodabilitytwo_fuzzer"
 
-#endif // INPUTMETHOD_IMF_LISTENERAPIS_FUZZER_H
-
+#endif // INPUTMETHOD_IMF_CHOOSEDIALOG_INPUTMETHODABILITYTWO_FUZZER_H

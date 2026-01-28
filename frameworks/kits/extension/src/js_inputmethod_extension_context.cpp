@@ -141,7 +141,7 @@ private:
             }
             delete task;
         };
-        if (napi_send_event(env, asyncTask, napi_eprio_high) != napi_status::napi_ok) {
+        if (napi_send_event(env, asyncTask, napi_eprio_high, "ime_OnStartAbility") != napi_status::napi_ok) {
             napiAsyncTask->Reject(env, CreateJsError(env, ERROR_CODE_ONE, "send event failed"));
         } else {
             napiAsyncTask.release();
@@ -194,7 +194,7 @@ private:
             task->Reject(env, CreateJsError(env, errcode, "Start Ability failed."));
             delete task;
         };
-        if (napi_send_event(env, asyncTask, napi_eprio_high) != napi_status::napi_ok) {
+        if (napi_send_event(env, asyncTask, napi_eprio_high, "ime_OnStartAbilityWithAccount") != napi_status::napi_ok) {
             napiAsyncTask->Reject(env, CreateJsError(env, ERROR_CODE_ONE, "send event failed"));
         } else {
             napiAsyncTask.release();
@@ -231,7 +231,7 @@ private:
             }
             delete task;
         };
-        if (napi_send_event(env, asyncTask, napi_eprio_high) != napi_status::napi_ok) {
+        if (napi_send_event(env, asyncTask, napi_eprio_high, "ime_OnTerminateAbility") != napi_status::napi_ok) {
             napiAsyncTask->Reject(env, CreateJsError(env, ERROR_CODE_ONE, "send event failed"));
         } else {
             napiAsyncTask.release();
@@ -282,7 +282,7 @@ private:
             task->Resolve(env, CreateJsUndefined(env));
             delete task;
         };
-        if (napi_send_event(env, asyncTask, napi_eprio_high) != napi_status::napi_ok) {
+        if (napi_send_event(env, asyncTask, napi_eprio_high, "ime_OnConnectAbility") != napi_status::napi_ok) {
             napiAsyncTask->Reject(env, CreateJsError(env, ERROR_CODE_ONE, "send event failed"));
         } else {
             napiAsyncTask.release();
@@ -341,7 +341,7 @@ private:
             task->Resolve(env, CreateJsUndefined(env));
             delete task;
         };
-        if (napi_send_event(env, asyncTask, napi_eprio_high) != napi_status::napi_ok) {
+        if (napi_send_event(env, asyncTask, napi_eprio_high, "ime_ConnectAbilityWithAccount") != napi_status::napi_ok) {
             napiAsyncTask->Reject(env, CreateJsError(env, ERROR_CODE_ONE, "send event failed"));
         } else {
             napiAsyncTask.release();
@@ -397,7 +397,7 @@ private:
                          : task->Reject(env, CreateJsError(env, errcode, "Disconnect Ability failed."));
             delete task;
         };
-        if (napi_send_event(env, asyncTask, napi_eprio_high) != napi_status::napi_ok) {
+        if (napi_send_event(env, asyncTask, napi_eprio_high, "ime_OnDisconnectAbility") != napi_status::napi_ok) {
             napiAsyncTask->Reject(env, CreateJsError(env, ERROR_CODE_ONE, "send event failed"));
         } else {
             napiAsyncTask.release();
@@ -522,6 +522,7 @@ void JSInputMethodExtensionConnection::HandleOnAbilityConnectDone(const AppExecF
 {
     IMSA_HILOGI("HandleOnAbilityConnectDone start, resultCode:%{public}d.", resultCode);
     // wrap ElementName
+    JsUtil::ScopeGuard scopeGuard(env_);
     napi_value napiElementName = OHOS::AppExecFwk::WrapElementName(env_, element);
 
     // wrap RemoteObject
@@ -535,33 +536,23 @@ void JSInputMethodExtensionConnection::HandleOnAbilityConnectDone(const AppExecF
     }
 
     napi_value obj = nullptr;
-    napi_handle_scope scope = nullptr;
-    napi_open_handle_scope(env_, &scope);
-    if (scope == nullptr) {
-        IMSA_HILOGE("scope is nullptr!");
-        return;
-    }
     if (napi_get_reference_value(env_, jsConnectionObject_, &obj) != napi_ok) {
         IMSA_HILOGE("failed to get jsConnectionObject_!");
-        napi_close_handle_scope(env_, scope);
         return;
     }
     if (obj == nullptr) {
         IMSA_HILOGE("failed to get object!");
-        napi_close_handle_scope(env_, scope);
         return;
     }
     napi_value methodOnConnect = nullptr;
     napi_get_named_property(env_, obj, "onConnect", &methodOnConnect);
     if (methodOnConnect == nullptr) {
         IMSA_HILOGE("failed to get onConnect from object!");
-        napi_close_handle_scope(env_, scope);
         return;
     }
     IMSA_HILOGI("JSInputMethodExtensionConnection::CallFunction onConnect, success.");
     napi_value callResult = nullptr;
     napi_call_function(env_, obj, methodOnConnect, ARGC_TWO, argv, &callResult);
-    napi_close_handle_scope(env_, scope);
     IMSA_HILOGI("OnAbilityConnectDone end.");
 }
 
@@ -588,6 +579,7 @@ void JSInputMethodExtensionConnection::HandleOnAbilityDisconnectDone(const AppEx
     int resultCode)
 {
     IMSA_HILOGI("HandleOnAbilityDisconnectDone start, resultCode:%{public}d.", resultCode);
+    JsUtil::ScopeGuard scopeGuard(env_);
     napi_value napiElementName = OHOS::AppExecFwk::WrapElementName(env_, element);
     napi_value argv[] = { napiElementName };
     if (jsConnectionObject_ == nullptr) {
@@ -595,27 +587,18 @@ void JSInputMethodExtensionConnection::HandleOnAbilityDisconnectDone(const AppEx
         return;
     }
     napi_value obj = nullptr;
-    napi_handle_scope scope = nullptr;
-    napi_open_handle_scope(env_, &scope);
-    if (scope == nullptr) {
-        IMSA_HILOGE("scope is nullptr!");
-        return;
-    }
     if (napi_get_reference_value(env_, jsConnectionObject_, &obj) != napi_ok) {
         IMSA_HILOGE("failed to get jsConnectionObject_!");
-        napi_close_handle_scope(env_, scope);
         return;
     }
     if (obj == nullptr) {
         IMSA_HILOGE("failed to get object!");
-        napi_close_handle_scope(env_, scope);
         return;
     }
     napi_value method = nullptr;
     napi_get_named_property(env_, obj, "onDisconnect", &method);
     if (method == nullptr) {
         IMSA_HILOGE("failed to get onDisconnect from object!");
-        napi_close_handle_scope(env_, scope);
         return;
     }
     // release connect
@@ -623,7 +606,6 @@ void JSInputMethodExtensionConnection::HandleOnAbilityDisconnectDone(const AppEx
     IMSA_HILOGI("OnAbilityDisconnectDone CallFunction success.");
     napi_value callResult = nullptr;
     napi_call_function(env_, obj, method, ARGC_ONE, argv, &callResult);
-    napi_close_handle_scope(env_, scope);
 }
 
 void JSInputMethodExtensionConnection::HandleOnAbilityDisconnect(const AppExecFwk::ElementName &element)
