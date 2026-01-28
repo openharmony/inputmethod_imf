@@ -193,6 +193,30 @@ std::shared_ptr<InputClientInfo> ClientGroup::GetClientInfoBoundRealIme()
     return iter->second;
 }
 
+std::shared_ptr<InputClientInfo> ClientGroup::GetCurrentClientInfoBoundRealIme()
+{
+    std::lock_guard<std::recursive_mutex> lock(mtx_);
+    auto currentClient = GetCurrentClient();
+    if (currentClient == nullptr) {
+        IMSA_HILOGD("has no currentClient.");
+        return nullptr;
+    }
+    auto iter = mapClients_.find(currentClient->AsObject());
+    if (iter == mapClients_.end()) {
+        IMSA_HILOGD("has no current client info.");
+        return nullptr;
+    }
+    auto clientInfo = iter->second;
+    if (clientInfo == nullptr) {
+        IMSA_HILOGD("clientInfo is nullptr.");
+        return nullptr;
+    }
+    if (clientInfo->bindImeData != nullptr && clientInfo->bindImeData->IsRealIme()) {
+        return clientInfo;
+    }
+    return nullptr;
+}
+
 std::shared_ptr<InputClientInfo> ClientGroup::GetClientBoundImeByWindowId(uint32_t windowId)
 {
     std::lock_guard<std::recursive_mutex> lock(mtx_);
@@ -208,7 +232,6 @@ std::shared_ptr<InputClientInfo> ClientGroup::GetClientBoundImeByWindowId(uint32
     return iter->second;
 }
 
-// LCOV_EXCL_STOP
 std::shared_ptr<InputClientInfo> ClientGroup::GetCurrentClientInfo()
 {
     auto client = GetCurrentClient();
@@ -218,7 +241,7 @@ std::shared_ptr<InputClientInfo> ClientGroup::GetCurrentClientInfo()
     }
     return GetClientInfo(client->AsObject());
 }
-// LCOV_EXCL_START
+
 int64_t ClientGroup::GetCurrentClientPid()
 {
     auto clientInfo = GetCurrentClientInfo();
