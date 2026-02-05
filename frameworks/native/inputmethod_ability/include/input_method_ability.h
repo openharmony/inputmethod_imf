@@ -40,7 +40,6 @@
 #include "msg_handler_callback_interface.h"
 #include "private_command_interface.h"
 #include "system_cmd_channel_proxy.h"
-#include "timer.h"
 #include "inputmethod_message_handler.h"
 #include "input_data_channel_proxy_wrap.h"
 #include "ime_mirror_manager.h"
@@ -86,7 +85,7 @@ public:
     int32_t ShowPanel(const std::shared_ptr<InputMethodPanel> &inputMethodPanel);
     int32_t HidePanel(const std::shared_ptr<InputMethodPanel> &inputMethodPanel);
     bool IsCurrentIme();
-    bool IsEnable();
+    bool IsEnable(uint64_t displayId);
     bool IsCallbackRegistered(const std::string &type);
     bool IsSystemApp();
     InputType GetInputType();
@@ -94,7 +93,7 @@ public:
     int32_t IsPanelShown(const PanelInfo &panelInfo, bool &isShown);
     int32_t GetSecurityMode(int32_t &security);
     int32_t OnSecurityChange(int32_t security);
-    int32_t OnConnectSystemCmd(const sptr<IRemoteObject> &channel, sptr<IRemoteObject> &agent);
+    int32_t OnConnectSystemCmd(const sptr<IRemoteObject> &channel);
     void OnClientInactive(const sptr<IRemoteObject> &channel);
     void NotifyKeyboardHeight(uint32_t panelHeight, PanelFlag panelFlag);
     int32_t SendPrivateCommand(const std::unordered_map<std::string, PrivateDataValue> &privateCommand,
@@ -106,7 +105,6 @@ public:
     int32_t FinishTextPreview(const AsyncIpcCallBack &callback = nullptr);
     int32_t NotifyPanelStatus(bool isUseParameterFlag = false, PanelFlag panelFlag = FLG_FIXED,
         bool isCheckFuncButton = false);
-    int32_t SetPanelShadow(const Shadow &shadow);
     InputAttribute GetInputAttribute();
     void OnSetInputType(InputType inputType);
     int32_t SendMessage(const ArrayBuffer &arrayBuffer);
@@ -126,7 +124,7 @@ public:
     int32_t StartInput(const InputClientInfo &clientInfo, bool isBindFromClient);
     int32_t StopInput(sptr<IRemoteObject> channelObj, uint32_t sessionId);
     int32_t ShowKeyboard(int32_t requestKeyboardReason);
-    int32_t HideKeyboard(uint64_t displayGroupId, bool isCheckGroupId);
+    int32_t HideKeyboard();
     int32_t OnDiscardTypingText();
     int32_t OnNotifyPreemption();
 
@@ -207,16 +205,17 @@ private:
     void ReportImeStartInput(int32_t eventCode, int32_t errCode, bool isShowKeyboard, int64_t consumeTime = -1);
     void ClearBindInfo(const sptr<IRemoteObject> &channel);
     void OnInputDataChannelDied(const sptr<IRemoteObject> &dataChannelObject);
-    void UpdateColorPrivateCommand(const std::unordered_map<std::string, PrivateDataValue> &privateCommand);
+    void UpdatePrivateCommand(const std::unordered_map<std::string, PrivateDataValue> &privateCommand);
+    void PushPrivateCommand();
     void SetSysPanelStatus(const SysPanelStatus &sysPanelStatus);
-
+    bool IsSystemPanelSupported();
+    
     ConcurrentMap<PanelType, std::shared_ptr<InputMethodPanel>> panels_ {};
     std::atomic_bool isBound_ { false };
     std::atomic_bool isProxyIme_{ false };
 
     sptr<IInputMethodCore> coreStub_ { nullptr };
     sptr<IInputMethodAgent> agentStub_ { nullptr };
-    sptr<IInputMethodAgent> systemAgentStub_ { nullptr };
     std::mutex imeCheckMutex_;
     bool isCurrentIme_ = false;
 
@@ -248,20 +247,15 @@ private:
     bool isInputStartNotified_ = false;
     ImeMirrorManager imeMirrorMgr_;
 
-    void StartTimer();
-    void ResetTimer();
-    void StopTimer();
-    void TimerCallback();
-    std::mutex timerLock_;
-    Utils::Timer timer_{ "OS_imfLightEventTimer" };
-    uint32_t timerId_{ 0 };
-
-    std::mutex colorPrivateCommandLock_;
-    std::unordered_map<std::string, PrivateDataValue> colorPrivateCommand_ = { { "sys_cmd", 1 } };
+    std::mutex privateCommandLock_;
+    std::vector<std::unordered_map<std::string, PrivateDataValue>> privateCommandData_;
 
     std::mutex sysPanelStatusLock_;
     SysPanelStatus sysPanelStatus_ { InputType::NONE, 0, 0, 0 } ;
-
+    
+    std::mutex isSysPanelSupportMutex_;
+    std::atomic<int32_t> isSysPanelSupport_ = 0;
+    
     bool IsDisplayChanged(uint64_t oldDisplayId, uint64_t newDisplayId);
 };
 } // namespace MiscServices

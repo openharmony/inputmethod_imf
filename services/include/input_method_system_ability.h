@@ -40,14 +40,16 @@ public:
     int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
     ErrCode StartInput(const InputClientInfoInner &inputClientInfoInner, std::vector<sptr<IRemoteObject>> &agents,
         std::vector<BindImeInfo> &imeInfos) override;
-    ErrCode ShowCurrentInput(uint64_t displayId, uint32_t type = static_cast<uint32_t>(ClientType::INNER_KIT)) override;
+    ErrCode ShowCurrentInput(uint32_t type) override;
+    ErrCode ShowCurrentInput(uint64_t displayId, uint32_t type) override;
+    ErrCode HideCurrentInput() override;
     ErrCode HideCurrentInput(uint64_t displayId) override;
     ErrCode ShowInput(const sptr<IInputClient> &client, uint32_t windowId,
         uint32_t type = static_cast<uint32_t>(ClientType::INNER_KIT), int32_t requestKeyboardReason = 0) override;
     ErrCode HideInput(const sptr<IInputClient> &client, uint32_t windowId) override;
     ErrCode StopInputSession(uint32_t windowId) override;
     ErrCode ReleaseInput(const sptr<IInputClient> &client, uint32_t sessionId) override;
-    ErrCode RequestHideInput(uint32_t windowId, bool isFocusTriggered) override;
+    ErrCode RequestHideInput(uint32_t windowId, uint64_t displayId, bool isFocusTriggered) override;
     ErrCode GetDefaultInputMethod(Property &prop, bool isBrief) override;
     ErrCode GetInputMethodConfig(ElementName &inputMethodConfig) override;
     ErrCode GetCurrentInputMethod(Property &resultValue) override;
@@ -68,9 +70,10 @@ public:
     ErrCode IsCurrentIme(bool &resultValue) override;
     ErrCode IsInputTypeSupported(int32_t type, bool &resultValue) override;
     ErrCode IsCurrentImeByPid(int32_t pid, bool &resultValue) override;
-    ErrCode StartInputType(int32_t type) override;
-    ErrCode StartInputTypeAsync(int32_t type) override;
+    ErrCode StartInputType(int32_t type, bool isPersistence) override;
+    ErrCode StartInputTypeAsync(int32_t type, bool isPersistence) override;
     ErrCode ExitCurrentInputType() override;
+    ErrCode IsPanelShown(const PanelInfo &panelInfo, bool &isShown) override;
     ErrCode IsPanelShown(uint64_t displayId, const PanelInfo &panelInfo, bool &isShown) override;
     ErrCode GetSecurityMode(int32_t &security) override;
     ErrCode ConnectSystemCmd(const sptr<IRemoteObject> &channel, sptr<IRemoteObject> &agent) override;
@@ -127,7 +130,8 @@ private:
     bool IsStartInputTypePermitted(int32_t userId);
     int32_t OnSwitchInputMethod(int32_t userId, const SwitchInfo &switchInfo, SwitchTrigger trigger);
     int32_t StartSwitch(int32_t userId, const SwitchInfo &switchInfo, const std::shared_ptr<PerUserSession> &session);
-    int32_t OnStartInputType(int32_t userId, const SwitchInfo &switchInfo, bool isCheckPermission);
+    int32_t OnStartInputType(int32_t userId, const SwitchInfo &switchInfo,
+        bool isCheckPermission, bool isPersistence = true);
     int32_t HandlePackageEvent(const Message *msg);
     int32_t HandleUpdateLargeMemoryState(const Message *msg);
     int32_t OnPackageRemoved(int32_t userId, const std::string &packageName);
@@ -139,7 +143,7 @@ private:
     int32_t Switch(int32_t userId, const std::string &bundleName, const std::shared_ptr<ImeInfo> &info);
     int32_t SwitchExtension(int32_t userId, const std::shared_ptr<ImeInfo> &info);
     int32_t SwitchSubType(int32_t userId, const std::shared_ptr<ImeInfo> &info);
-    int32_t SwitchInputType(int32_t userId, const SwitchInfo &switchInfo);
+    int32_t SwitchInputType(int32_t userId, const SwitchInfo &switchInfo, bool isPersistence = true);
     void GetValidSubtype(const std::string &subName, const std::shared_ptr<ImeInfo> &info);
     ServiceRunningState state_;
     void InitServiceHandler();
@@ -180,7 +184,7 @@ private:
     int32_t IsDefaultImeFromTokenId(int32_t userId, uint32_t tokenId);
     void DealSwitchRequest();
     bool IsCurrentIme(int32_t userId, uint32_t tokenId);
-    int32_t StartInputType(int32_t userId, InputType type);
+    int32_t StartInputType(int32_t userId, InputType type, bool isPersistence = true);
     // if switch input type need to switch ime, then no need to hide panel first.
     void NeedHideWhenSwitchInputType(int32_t userId, InputType type, bool &needHide);
     bool GetDeviceFunctionKeyState(int32_t functionKey, bool &isEnable);
@@ -191,6 +195,7 @@ private:
     std::pair<bool, FocusedInfo> IsFocusedOrBroker(int64_t callingPid, uint32_t callingTokenId, uint32_t windowId = 0,
         const sptr<IRemoteObject> &abilityToken = nullptr);
     int32_t ShowInputInner(sptr<IInputClient> client, uint32_t windowId, int32_t requestKeyboardReason = 0);
+    int32_t ShowCurrentInputInner();
     int32_t ShowCurrentInputInner(uint64_t displayId);
     std::pair<int64_t, std::string> GetCurrentImeInfoForHiSysEvent(int32_t userId);
     int32_t GetScreenLockIme(int32_t userId, std::string &ime);

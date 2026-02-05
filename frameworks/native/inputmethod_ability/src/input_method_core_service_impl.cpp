@@ -49,9 +49,9 @@ ErrCode InputMethodCoreServiceImpl::ShowKeyboard(int32_t requestKeyboardReason)
     return ERR_OK;
 }
 
-ErrCode InputMethodCoreServiceImpl::HideKeyboard(uint64_t displayGroupId, bool isCheckGroupId)
+ErrCode InputMethodCoreServiceImpl::HideKeyboard()
 {
-    auto task = std::make_shared<TaskImsaHideKeyboard>(displayGroupId, isCheckGroupId);
+    auto task = std::make_shared<TaskImsaHideKeyboard>();
     TaskManager::GetInstance().PostTask(task);
     return ERR_OK;
 }
@@ -63,10 +63,9 @@ ErrCode InputMethodCoreServiceImpl::StopInputService(bool isTerminateIme)
     return ERR_OK;
 }
 // LCOV_EXCL_START
-ErrCode InputMethodCoreServiceImpl::OnConnectSystemCmd(
-    const sptr<IRemoteObject> &channel, sptr<IRemoteObject> &agent)
+ErrCode InputMethodCoreServiceImpl::OnConnectSystemCmd(const sptr<IRemoteObject> &channel)
 {
-    return InputMethodAbility::GetInstance().OnConnectSystemCmd(channel, agent);
+    return InputMethodAbility::GetInstance().OnConnectSystemCmd(channel);
 }
 // LCOV_EXCL_STOP
 ErrCode InputMethodCoreServiceImpl::StartInput(const InputClientInfoInner &clientInfoInner, bool isBindFromClient)
@@ -103,9 +102,9 @@ ErrCode InputMethodCoreServiceImpl::StopInput(const sptr<IRemoteObject> &channel
     return ERR_OK;
 }
 // LCOV_EXCL_STOP
-ErrCode InputMethodCoreServiceImpl::IsEnable(bool &resultValue)
+ErrCode InputMethodCoreServiceImpl::IsEnable(bool &resultValue, uint64_t displayId)
 {
-    resultValue = InputMethodAbility::GetInstance().IsEnable();
+    resultValue = InputMethodAbility::GetInstance().IsEnable(displayId);
     return ERR_OK;
 }
 
