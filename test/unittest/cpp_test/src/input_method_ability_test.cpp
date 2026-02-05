@@ -17,9 +17,9 @@
 #include "input_method_ability.h"
 
 #include "input_method_controller.h"
-#include "input_method_panel.h"
 #include "input_method_system_ability.h"
 #include "key_event_util.h"
+#include "system_cmd_channel_service_impl.h"
 #include "task_manager.h"
 #undef private
 
@@ -303,8 +303,7 @@ void InputMethodAbilityTest::TestOnConnectSystemCmd()
         IMSA_HILOGI("TestOnConnectSystemCmd start %{public}d", count);
         sptr<IInputDataChannel> channel = new (std::nothrow) InputDataChannelServiceImpl();
         ASSERT_NE(channel, nullptr);
-        sptr<IRemoteObject> agent = nullptr;
-        auto ret = inputMethodAbility_.OnConnectSystemCmd(channel->AsObject(), agent);
+        auto ret = inputMethodAbility_.OnConnectSystemCmd(channel->AsObject());
         multiThreadExecTotalNum_++;
         EXPECT_EQ(ret, ErrorCode::NO_ERROR);
     }
@@ -549,9 +548,7 @@ HWTEST_F(InputMethodAbilityTest, testShowKeyboardWithoutImeListener, TestSize.Le
 HWTEST_F(InputMethodAbilityTest, testHideKeyboardWithoutImeListener, TestSize.Level0)
 {
     IMSA_HILOGI("InputMethodAbilityTest testHideKeyboardWithoutImeListener start.");
-    uint64_t displayGroupId = 0;
-    bool isCheckGroupId = false;
-    auto ret = inputMethodAbility_.HideKeyboard(displayGroupId, isCheckGroupId);
+    auto ret = inputMethodAbility_.HideKeyboard();
     EXPECT_EQ(ret, ErrorCode::NO_ERROR);
 }
 
@@ -1178,14 +1175,9 @@ HWTEST_F(InputMethodAbilityTest, testNotifyPanelStatusInfo_001, TestSize.Level0)
     EXPECT_EQ(ret, ErrorCode::NO_ERROR);
 
     TextListener::ResetParam();
-    panel1->immersiveEffect_.fluidLightMode = FluidLightMode::BACKGROUND_FLUID_LIGHT;
     ret = inputMethodAbility_.ShowKeyboard(static_cast<int32_t>(RequestKeyboardReason::NONE));
     EXPECT_EQ(ret, ErrorCode::NO_ERROR);
     EXPECT_TRUE(TextListener::WaitSendKeyboardStatusCallback(KeyboardStatus::SHOW));
-    EXPECT_NE(inputMethodAbility_.timerId_, 0);
-    std::string text = "text";
-    ret = inputMethodAbility_.InsertText(text);
-    EXPECT_EQ(ret, ErrorCode::NO_ERROR);
     PanelStatusInfo statusInfo;
     statusInfo.panelInfo = info1;
     statusInfo.visible = true;
@@ -1193,9 +1185,7 @@ HWTEST_F(InputMethodAbilityTest, testNotifyPanelStatusInfo_001, TestSize.Level0)
     EXPECT_TRUE(TextListener::WaitNotifyPanelStatusInfoCallback(statusInfo));
 
     TextListener::ResetParam();
-    uint64_t displayGroupId = 0;
-    bool isCheckGroupId = false;
-    ret = inputMethodAbility_.HideKeyboard(displayGroupId, isCheckGroupId);
+    ret = inputMethodAbility_.HideKeyboard();
     EXPECT_EQ(ret, ErrorCode::NO_ERROR);
     EXPECT_TRUE(TextListener::WaitSendKeyboardStatusCallback(KeyboardStatus::HIDE));
     PanelStatusInfo statusInfo1;
@@ -1597,10 +1587,70 @@ HWTEST_F(InputMethodAbilityTest, testSendPrivateCommand_004, TestSize.Level0)
     InputMethodAbilityTest::GetIMCAttachIMA();
     IdentityCheckerMock::SetBundleNameValid(true);
     inputMethodAbility_.systemCmdChannelProxy_ = nullptr;
+    inputMethodAbility_.isSysPanelSupport_ = 1;
     auto ret = inputMethodAbility_.SendPrivateCommand(privateCommand);
     EXPECT_EQ(ret, ErrorCode::ERROR_SYSTEM_CMD_CHANNEL_ERROR);
     InputMethodAbilityTest::GetIMCDetachIMA();
     IdentityCheckerMock::SetBundleNameValid(false);
+}
+
+/**
+ * @tc.name: testSendPrivateCommand_005
+ * @tc.desc: IMA SendPrivateCommand with systemCmd is null.
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author: zhangsaiyang
+ */
+HWTEST_F(InputMethodAbilityTest, testSendPrivateCommand_005, TestSize.Level0)
+{
+    IMSA_HILOGI("InputMethodAbility testSendPrivateCommand_005 Test START");
+    std::unordered_map<std::string, PrivateDataValue> privateCommand;
+    privateCommand.emplace("sys_cmd", 1);
+    privateCommand.emplace("functionKeyColor", "#FF000000");
+    privateCommand.emplace("functionKeyPressColor", "#FF000000");
+    TextListener::ResetParam();
+    InputMethodAbilityTest::GetIMCAttachIMA();
+    IdentityCheckerMock::SetBundleNameValid(true);
+    inputMethodAbility_.systemCmdChannelProxy_ = nullptr;
+    inputMethodAbility_.isSysPanelSupport_ = 1;
+    int32_t num = 0;
+    while (num <= 11) {
+        auto ret = inputMethodAbility_.SendPrivateCommand(privateCommand);
+        EXPECT_EQ(ret, ErrorCode::ERROR_SYSTEM_CMD_CHANNEL_ERROR);
+        num++;
+    }
+    inputMethodAbility_.PushPrivateCommand();
+    EXPECT_EQ(10, inputMethodAbility_.privateCommandData_.size());
+    auto systemCmdChannelServiceImpl = new (std::nothrow) SystemCmdChannelServiceImpl();
+    inputMethodAbility_.systemCmdChannelProxy_ =
+        new (std::nothrow) SystemCmdChannelProxy(systemCmdChannelServiceImpl->AsObject());
+    inputMethodAbility_.PushPrivateCommand();
+    EXPECT_EQ(0, inputMethodAbility_.privateCommandData_.size());
+    InputMethodAbilityTest::GetIMCDetachIMA();
+    IdentityCheckerMock::SetBundleNameValid(false);
+}
+
+/**
+ * @tc.name: testConnectSystemCmd_001
+ * @tc.desc: IMA testConnectSystemCmd.
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author: zhangsaiyang
+ */
+HWTEST_F(InputMethodAbilityTest, testConnectSystemCmd_001, TestSize.Level0)
+{
+    IMSA_HILOGI("InputMethodAbility testConnectSystemCmd_001 Test START");
+    TextListener::ResetParam();
+    IdentityCheckerMock::SetBundleNameValid(true);
+    IdentityCheckerMock::SetPermission(true);
+    InputMethodAbilityTest::GetIMCAttachIMA();
+    auto systemCmdChannelServiceImpl = new (std::nothrow) SystemCmdChannelServiceImpl();
+    sptr<IRemoteObject> agent;
+    auto ret = InputMethodAbilityTest::imsa_->ConnectSystemCmd(systemCmdChannelServiceImpl->AsObject(), agent);
+    EXPECT_EQ(ret, ErrorCode::NO_ERROR);
+    InputMethodAbilityTest::GetIMCDetachIMA();
+    IdentityCheckerMock::SetBundleNameValid(false);
+    IdentityCheckerMock::SetPermission(false);
 }
 
 /**
@@ -1899,7 +1949,7 @@ HWTEST_F(InputMethodAbilityTest, BranchCoverage001, TestSize.Level0)
     auto ret2 = InputMethodAbilityTest::inputMethodAbility_.IsCurrentIme();
     EXPECT_TRUE(ret2);
 
-    ret2 = InputMethodAbilityTest::inputMethodAbility_.IsEnable();
+    ret2 = InputMethodAbilityTest::inputMethodAbility_.IsEnable(0);
     EXPECT_FALSE(ret2);
 }
 
@@ -2480,54 +2530,6 @@ HWTEST_F(InputMethodAbilityTest, testSetInputDataChannel, TestSize.Level0)
     InputMethodAbilityTest::inputMethodAbility_.SetInputDataChannel(dataChannelObject1);
     EXPECT_EQ(
         InputMethodAbilityTest::inputMethodAbility_.dataChannelObject_.GetRefPtr(), dataChannelObject1.GetRefPtr());
-}
-
-/**
- * @tc.name: testTimer_001
- * @tc.desc: InputMethodAbility Timer_001
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(InputMethodAbilityTest, testTimer_001, TestSize.Level0)
-{
-    IMSA_HILOGI("InputMethodAbility testTimer_001 START");
-    inputMethodAbility_.StartTimer();
-    EXPECT_NE(inputMethodAbility_.timerId_, 0);
-    inputMethodAbility_.StopTimer();
-    EXPECT_EQ(inputMethodAbility_.timerId_, 0);
-}
-/**
- * @tc.name: testHideKeyboard_001
- * @tc.desc: InputMethodAbility Timer_001
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(InputMethodAbilityTest, testHideKeyboard_001, TestSize.Level0)
-{
-    IMSA_HILOGI("InputMethodAbility testHideKeyboard_001 START");
-    uint64_t displayGroupId = 1;
-    uint64_t isCheckGroupId = true;
-    uint64_t displayGroupId1 = 3;
-    uint64_t isCheckGroupId1 = false;
-    InputAttribute attribute;
-    attribute.displayGroupId = displayGroupId;
-    inputMethodAbility_.imeListener_ = nullptr;
-    inputMethodAbility_.SetInputAttribute(attribute);
-    // check pass
-    auto ret = inputMethodAbility_.HideKeyboard(displayGroupId, isCheckGroupId);
-    EXPECT_EQ(ret, ErrorCode::ERROR_IME);
-
-    // no need check, same displayGroupId
-    ret = inputMethodAbility_.HideKeyboard(displayGroupId, isCheckGroupId1);
-    EXPECT_EQ(ret, ErrorCode::ERROR_IME);
-
-    // no need check, different displayGroupId
-    ret = inputMethodAbility_.HideKeyboard(displayGroupId1, isCheckGroupId1);
-    EXPECT_EQ(ret, ErrorCode::ERROR_IME);
-
-    // check failed
-    ret = inputMethodAbility_.HideKeyboard(displayGroupId1, isCheckGroupId);
-    EXPECT_EQ(ret, ErrorCode::NO_ERROR);
 }
 } // namespace MiscServices
 } // namespace OHOS

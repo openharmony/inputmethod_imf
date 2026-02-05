@@ -32,7 +32,7 @@ InputMethodSettingImpl &InputMethodSettingImpl::GetInstance()
     return instance;
 }
 
-array<InputMethodProperty_t> InputMethodSettingImpl::GetInputMethodsSync(bool enable)
+array<InputMethodProperty_t> InputMethodSettingImpl::GetInputMethodsAsync(bool enable)
 {
     std::vector<Property> properties;
     int32_t errCode = InputMethodController::GetInstance()->ListInputMethod(enable, properties);
@@ -106,7 +106,29 @@ bool InputMethodSettingImpl::IsPanelShown(PanelInfo_t const &panelInfo)
     return isShown;
 }
 
-array<InputMethodProperty_t> InputMethodSettingImpl::GetAllInputMethodsSync()
+bool InputMethodSettingImpl::IsPanelShownId(PanelInfo_t const &panelInfo, int64_t displayId)
+{
+    PanelInfo info;
+    if (panelInfo.flag.has_value()) {
+        info.panelFlag = static_cast<PanelFlag>(panelInfo.flag.value().get_value());
+    }
+    info.panelType = static_cast<PanelType>(panelInfo.type.get_value());
+    uint64_t id = 0;
+    if (displayId >= 0) {
+        id = static_cast<uint64_t>(displayId);
+    }
+    bool isShown = false;
+    IMSA_HILOGD("target displayId: %{public}" PRIu64 "", id);
+    int32_t errorCode = InputMethodController::GetInstance()->IsPanelShown(id, info, isShown);
+    if (errorCode != ErrorCode::NO_ERROR) {
+        set_business_error(JsUtils::Convert(errorCode), "failed to query is panel shown!");
+        IMSA_HILOGE("failed to query is panel shown, errCode:%{public}d!", errorCode);
+        return false;
+    }
+    return isShown;
+}
+
+array<InputMethodProperty_t> InputMethodSettingImpl::GetAllInputMethodsAsync()
 {
     std::vector<Property> properties;
     int32_t errCode = InputMethodController::GetInstance()->ListInputMethod(properties);
@@ -279,7 +301,9 @@ void InputMethodSettingImpl::OnPanelStatusChange(std::string const &type, const 
             .left = info.left,
             .top = info.top,
             .width = static_cast<long>(info.width),
-            .height = static_cast<long>(info.height) };
+            .height = static_cast<long>(info.height),
+            .displayId = taihe::optional<int64_t>(std::in_place_t{}, static_cast<int64_t>(info.displayId))
+        };
         taihe::array<InputWindowInfo_t> arrInfo{ inputWindowInfo };
         auto &func = std::get<taihe::callback<void(taihe::array_view<InputWindowInfo_t>)>>(cb->callback);
         func(arrInfo);
@@ -307,15 +331,28 @@ EnabledState_t InputMethodSettingImpl::GetInputMethodStateSync()
 void InputMethodSettingImpl::EnableInputMethodSync(::taihe::string_view bundleName,
     ::taihe::string_view extensionName, ::ohos::inputMethod::EnabledState enabledState)
 {
-    int32_t errCode = ErrorCode::ERROR_EX_NULL_POINTER;
     OHOS::MiscServices::EnabledStatus status;
     auto instance = InputMethodController::GetInstance();
     if (instance == nullptr) {
         IMSA_HILOGE("GetInstance return nullptr!");
         return;
     }
-    errCode = instance->EnableIme(std::string(bundleName), std::string(extensionName),
+    std::string tmpBundleName = std::string(bundleName);
+    std::string tmpExtensionName = std::string(extensionName);
+    if (tmpBundleName.empty() || tmpExtensionName.empty()) {
+        IMSA_HILOGE("bundleName or extensionName is empty!");
+        set_business_error(JsUtils::Convert(ErrorCode::ERROR_IME_NOT_FOUND),
+            JsUtils::ToMessage(JsUtils::Convert(ErrorCode::ERROR_IME_NOT_FOUND)));
+        return;
+    }
+    auto errCode = instance->EnableIme(tmpBundleName, tmpExtensionName,
         static_cast<OHOS::MiscServices::EnabledStatus>(enabledState.get_value()));
+    if (errCode != ErrorCode::NO_ERROR) {
+        IMSA_HILOGE("EnableIme failed!");
+        set_business_error(JsUtils::Convert(errCode), JsUtils::ToMessage(JsUtils::Convert(errCode)));
+        return;
+    }
+    IMSA_HILOGI("EnableIme success!");
 }
 } // namespace MiscServices
 } // namespace OHOS

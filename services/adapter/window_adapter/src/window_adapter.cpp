@@ -29,9 +29,6 @@ namespace MiscServices {
 using namespace OHOS::Rosen;
 using WMError = OHOS::Rosen::WMError;
 using namespace std::chrono_literals;
-#ifdef SCENE_BOARD_ENABLE
-constexpr int32_t MAX_TIMEOUT = 5000; //5ms
-#endif
 // LCOV_EXCL_START
 WindowAdapter::~WindowAdapter()
 {
@@ -42,42 +39,13 @@ WindowAdapter &WindowAdapter::GetInstance()
     static WindowAdapter windowAdapter;
     return windowAdapter;
 }
-// LCOV_EXCL_STOP
+
 void WindowAdapter::GetFocusInfo(OHOS::Rosen::FocusChangeInfo &focusInfo, uint64_t displayId)
 {
 #ifdef SCENE_BOARD_ENABLE
     WindowManagerLite::GetInstance().GetFocusWindowInfo(focusInfo, displayId);
 #else
     WindowManager::GetInstance().GetFocusWindowInfo(focusInfo, displayId);
-#endif
-}
-// LCOV_EXCL_START
-bool WindowAdapter::GetCallingWindowInfo(
-    const uint32_t windId, const int32_t userId, CallingWindowInfo &callingWindowInfo)
-{
-#ifdef SCENE_BOARD_ENABLE
-    IMSA_HILOGD("[%{public}d,%{public}d] run in.", userId, windId);
-    callingWindowInfo.windowId_ = static_cast<int32_t>(windId);
-    callingWindowInfo.userId_ = userId;
-    int64_t start =  std::chrono::duration_cast<std::chrono::microseconds>
-        (std::chrono::system_clock::now().time_since_epoch()).count();
-    auto wmErr = WindowManagerLite::GetInstance().GetCallingWindowInfo(callingWindowInfo);
-    int64_t end =  std::chrono::duration_cast<std::chrono::microseconds>
-        (std::chrono::system_clock::now().time_since_epoch()).count();
-    int64_t durTime = end - start;
-    if (durTime > MAX_TIMEOUT) {
-        IMSA_HILOGW("GetCallingWindowInfo cost [%{public}" PRId64 "]us", durTime);
-    }
-    if (wmErr != WMError::WM_OK) {
-        IMSA_HILOGE("[%{public}d,%{public}d,%{public}d] failed to get calling window info.", userId, windId, wmErr);
-        return false;
-    }
-    IMSA_HILOGD("callingWindowInfo:%{public}s",
-        WindowDisplayChangeListener::CallingWindowInfoToString(callingWindowInfo).c_str());
-    return true;
-#else
-    IMSA_HILOGE("capability not supported");
-    return false;
 #endif
 }
 
@@ -157,7 +125,37 @@ uint64_t WindowAdapter::GetDisplayIdByWindowId(int32_t callingWindowId)
     return DEFAULT_DISPLAY_ID;
 #endif
 }
-// LCOV_EXCL_STOP
+
+uint64_t WindowAdapter::GetDisplayIdWithCorrect(int32_t windowId, uint64_t displayId)
+{
+    uint64_t displayIdOut = DEFAULT_DISPLAY_ID;
+#ifdef SCENE_BOARD_ENABLE
+    if (windowId == DEFAULT_WINDOW_ID) {
+        return displayIdOut;
+    }
+    std::vector<sptr<WindowInfo>> windowInfos;
+    if (!ListWindowInfo(windowInfos)) {
+        return displayIdOut;
+    }
+    auto iter = std::find_if(windowInfos.begin(), windowInfos.end(), [&windowId](const auto &windowInfo) {
+        return windowInfo != nullptr && windowInfo->windowMetaInfo.windowId == windowId;
+    });
+    if (iter == windowInfos.end()) {
+        IMSA_HILOGE("not found windowId:%{public}d, displayId:%{public}" PRIu64 ".", windowId, displayId);
+        if (windowId == SCB_ROOT_WINDOW_ID) {
+            displayIdOut = displayId;
+        }
+        return displayIdOut;
+    }
+    displayIdOut = (*iter)->windowDisplayInfo.displayId;
+    IMSA_HILOGD("find windowId:%{public}d, displayId:%{public}" PRIu64 ".", windowId, displayIdOut);
+    return displayIdOut;
+#else
+    IMSA_HILOGI("capability not supported");
+    return displayIdOut;
+#endif
+}
+
 uint64_t WindowAdapter::GetDisplayIdByPid(int64_t callingPid)
 {
 #ifdef SCENE_BOARD_ENABLE
@@ -227,7 +225,7 @@ int32_t WindowAdapter::StoreAllDisplayGroupInfos()
 #endif
     return ErrorCode::NO_ERROR;
 }
-
+// LCOV_EXCL_STOP
 int32_t WindowAdapter::GetAllFocusWindowInfos(std::vector<FocusChangeInfo> &focusWindowInfos)
 {
     std::unordered_map<uint64_t, uint64_t> displayGroupIds;
@@ -258,6 +256,29 @@ uint64_t WindowAdapter::GetDisplayGroupId(uint64_t displayId)
     return DEFAULT_DISPLAY_GROUP_ID;
 }
 
+bool WindowAdapter::IsDisplayGroupIdExist(uint64_t displayGroupId)
+{
+    if (displayGroupId == DEFAULT_DISPLAY_GROUP_ID) {
+        return true;
+    }
+    IMSA_HILOGD("displayGroupId:%{public}" PRIu64 ".", displayGroupId);
+    std::lock_guard<std::mutex> lock(displayGroupIdsLock_);
+    auto iter = std::find_if(displayGroupIds_.begin(), displayGroupIds_.end(),
+        [displayGroupId](const std::pair<uint64_t, uint64_t> &pair) { return pair.second == displayGroupId; });
+    return iter != displayGroupIds_.end();
+}
+
+bool WindowAdapter::IsDisplayIdExist(uint64_t displayId)
+{
+    if (displayId == DEFAULT_DISPLAY_ID) {
+        return true;
+    }
+    IMSA_HILOGD("displayId:%{public}" PRIu64 ".", displayId);
+    std::lock_guard<std::mutex> lock(displayGroupIdsLock_);
+    return displayGroupIds_.find(displayId) != displayGroupIds_.end();
+}
+
+// LCOV_EXCL_START
 bool WindowAdapter::IsDefaultDisplayGroup(uint64_t displayId)
 {
     return GetDisplayGroupId(displayId) == DEFAULT_DISPLAY_GROUP_ID;
@@ -267,16 +288,9 @@ uint64_t WindowAdapter::GetDisplayGroupId(uint32_t windowId)
 {
     IMSA_HILOGD("by windowId run in:%{public}d.", windowId);
     auto displayId = GetDisplayIdByWindowId(windowId);
-    std::lock_guard<std::mutex> lock(displayGroupIdsLock_);
-    auto iter = displayGroupIds_.find(displayId);
-    if (iter != displayGroupIds_.end()) {
-        IMSA_HILOGD("by windowId:%{public}d/%{public}" PRIu64 "/%{public}" PRIu64 ".", windowId, displayId,
-            iter->second);
-        return iter->second;
-    }
-    return DEFAULT_DISPLAY_GROUP_ID;
+    return GetDisplayGroupId(displayId);
 }
-
+// LCOV_EXCL_STOP
 int32_t WindowAdapter::GetAllDisplayGroupInfos(
     std::unordered_map<uint64_t, uint64_t> &displayGroupIds, std::vector<FocusChangeInfo> &focusWindowInfos)
 {
@@ -310,7 +324,7 @@ void WindowAdapter::SetFocusWindowInfos(const std::vector<Rosen::FocusChangeInfo
     std::lock_guard<std::mutex> lock(focusWindowInfosLock_);
     focusWindowInfos_ = focusWindowInfos;
 }
-
+// LCOV_EXCL_START
 void WindowAdapter::OnDisplayGroupInfoChanged(uint64_t displayId, uint64_t displayGroupId, bool isAdd)
 {
     IMSA_HILOGI("display change:%{public}" PRIu64 "/%{public}" PRIu64 "/%{public}d.", displayId,
@@ -352,7 +366,7 @@ void WindowAdapter::OnUnFocused(const FocusChangeInfo &focusWindowInfo)
     }
     focusWindowInfos_.erase(iter);
 }
-
+// LCOV_EXCL_STOP
 int32_t WindowAdapter::RegisterAllGroupInfoChangedListener()
 {
 #ifdef SCENE_BOARD_ENABLE

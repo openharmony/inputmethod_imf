@@ -52,12 +52,12 @@ private:
     std::pair<bool, FocusedInfo> IsFocusedUIExtension(
         uint32_t windowId, uint64_t displayId, const std::vector<Rosen::FocusChangeInfo> &focusWindowInfos);
     std::pair<bool, FocusedInfo> IsFocusedUIExtension(
-        uint32_t callingTokenId, const std::vector<Rosen::FocusChangeInfo> &focusWindowInfos);
+        uint64_t displayId, uint32_t callingTokenId, const std::vector<Rosen::FocusChangeInfo> &focusWindowInfos);
     bool IsBrokerInner(Security::AccessToken::AccessTokenID tokenId);
     std::pair<bool, FocusedInfo> IsFocusedScbNotEnable(
         int64_t callingPid, uint32_t callingTokenId, uint32_t windowId, const sptr<IRemoteObject> &abilityToken);
     bool IsFocusedUIExtension(uint32_t callingTokenId, sptr<IRemoteObject> abilityToken);
-    FocusedInfo GenerateFocusInfo(
+    std::pair<bool, FocusedInfo> GenerateFocusCheckRet(
         const Rosen::FocusChangeInfo &focusWindowInfo, const std::vector<Rosen::FocusChangeInfo> &focusWindowInfos);
 };
 } // namespace MiscServices

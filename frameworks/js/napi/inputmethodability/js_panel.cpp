@@ -162,6 +162,7 @@ napi_status JsPanel::CheckSetUiContentParams(napi_env env, size_t argc, std::sha
     napi_value *argv)
 {
     napi_status status = napi_generic_failure;
+    JsUtil::ScopeGuard scopeGuard(env);
     PARAM_CHECK_RETURN(env, argc >= 1, "at least one parameter is required!", TYPE_NONE, status);
     // 0 means the first param path<std::string>
     PARAM_CHECK_RETURN(env, JsUtils::GetValue(env, argv[0], ctxt->path) == napi_ok,
@@ -173,14 +174,7 @@ napi_status JsPanel::CheckSetUiContentParams(napi_env env, size_t argc, std::sha
         CHECK_RETURN(status == napi_ok, "get valueType failed!", status);
         if (valueType == napi_object) {
             napi_ref storage = nullptr;
-            napi_handle_scope scope = nullptr;
-            napi_open_handle_scope(env, &scope);
-            if (scope == nullptr) {
-                IMSA_HILOGE("scope is nullptr!");
-                return napi_generic_failure;
-            }
             napi_create_reference(env, argv[1], 1, &storage);
-            napi_close_handle_scope(env, scope);
             auto contentStorage = (storage == nullptr) ? nullptr
                                                         : std::shared_ptr<NativeReference>(
                                                                 reinterpret_cast<NativeReference *>(storage));
