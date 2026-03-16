@@ -479,7 +479,7 @@ HWTEST_F(FullImeInfoManagerTest, test_Get_001, TestSize.Level0)
     int32_t userId1 = 101;
     std::vector<Property> props;
     auto ret = FullImeInfoManager::GetInstance().Get(userId1, props);
-    EXPECT_EQ(ret, ErrorCode::NO_ERROR);
+    EXPECT_EQ(ret, ErrorCode::ERROR_IMSA_GET_IME_INFO_FAILED);
     EXPECT_TRUE(props.empty());
 }
 
@@ -564,6 +564,49 @@ HWTEST_F(FullImeInfoManagerTest, test_Get_005, TestSize.Level0)
     auto ret = FullImeInfoManager::GetInstance().Get(userId1, bundleName, infoRet);
     EXPECT_TRUE(ret);
     EXPECT_EQ(infoRet.prop.name, info.prop.name);
+}
+
+/**
+ * @tc.name: test_GetWithoutSystemSpecialIme_001
+ * @tc.desc: test test_GetWithoutSystemSpecialIme_001
+ * @tc.type: FUNC
+ */
+HWTEST_F(FullImeInfoManagerTest, test_GetWithoutSystemSpecialIme_001, TestSize.Level0)
+{
+    IMSA_HILOGI("test_GetWithoutSystemSpecialIme_001 start");
+    int32_t userId = 100;
+    std::vector<FullImeInfo> imeInfos;
+    FullImeInfo info;
+    imeInfos.push_back(info);
+    FullImeInfoManager::GetInstance().fullImeInfos_.insert_or_assign(userId, imeInfos);
+
+    int32_t userId1 = 101;
+    std::vector<Property> props;
+    auto ret = FullImeInfoManager::GetInstance().GetWithoutSystemSpecialIme(userId1, props);
+    EXPECT_EQ(ret, ErrorCode::ERROR_IMSA_GET_IME_INFO_FAILED);
+    EXPECT_TRUE(props.empty());
+}
+
+/**
+ * @tc.name: test_GetWithoutSystemSpecialIme_002
+ * @tc.desc: test test_GetWithoutSystemSpecialIme_002
+ * @tc.type: FUNC
+ */
+HWTEST_F(FullImeInfoManagerTest, test_GetWithoutSystemSpecialIme_002, TestSize.Level0)
+{
+    IMSA_HILOGI("test_GetWithoutSystemSpecialIme_002 start");
+    int32_t userId = 100;
+    std::vector<FullImeInfo> imeInfos;
+    FullImeInfo info;
+    FullImeInfo info1;
+    info1.isSystemSpecialIme = true;
+    imeInfos.push_back(info);
+    imeInfos.push_back(info1);
+    FullImeInfoManager::GetInstance().fullImeInfos_.insert_or_assign(userId, imeInfos);
+
+    std::vector<Property> props;
+    FullImeInfoManager::GetInstance().GetWithoutSystemSpecialIme(userId, props);
+    ASSERT_EQ(props.size(), 1);
 }
 } // namespace MiscServices
 } // namespace OHOS

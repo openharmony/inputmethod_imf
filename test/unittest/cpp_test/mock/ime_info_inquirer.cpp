@@ -318,12 +318,6 @@ SystemConfig ImeInfoInquirer::GetSystemConfig()
     return sysCfg_;
 }
 
-std::string ImeInfoInquirer::GetSystemSpecialIme()
-{
-    std::lock_guard<std::mutex> lock(sysCfgLock_);
-    return sysCfg_.systemSpecialInputMethod;
-}
-
 void ImeInfoInquirer::SetRunningIme(int32_t userId, const std::vector<std::string> &ime)
 {
     std::lock_guard<std::mutex> lock(runningImeLock_);

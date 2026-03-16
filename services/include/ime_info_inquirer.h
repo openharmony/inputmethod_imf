@@ -17,7 +17,6 @@
 #define SERVICES_INCLUDE_IME_INFO_ENQUIRER_H
 
 #include "bundle_mgr_proxy.h"
-#include "ime_cfg_manager.h"
 #include "input_method_info.h"
 #include "input_method_property.h"
 #include "resource_manager.h"
@@ -96,7 +95,6 @@ public:
     void InitDynamicStartImeCfg();
     SystemConfig GetSystemConfig();
     ImeNativeCfg GetDefaultIme();
-    std::string GetSystemSpecialIme();
     int32_t QueryFullImeInfo(std::vector<std::pair<int32_t, std::vector<FullImeInfo>>> &imeInfos);
     int32_t QueryFullImeInfo(int32_t userId, std::vector<FullImeInfo> &imeInfos, bool needBrief = false);
     int32_t GetFullImeInfo(int32_t userId, const std::string &bundleName, FullImeInfo &imeInfo);
@@ -154,7 +152,7 @@ private:
 
     SystemConfig systemConfig_;
     std::vector<DynamicStartImeCfgItem> dynamicStartImeList_;
-    bool IsTempInputMethod(const OHOS::AppExecFwk::ExtensionAbilityInfo &extInfo);
+    bool IsSystemSpecialIme(const OHOS::AppExecFwk::ExtensionAbilityInfo &extInfo);
 };
 } // namespace MiscServices
 } // namespace OHOS
