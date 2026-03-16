@@ -144,9 +144,6 @@ private:
     void OnScreenLock(const Message *msg);
     int32_t OnDisplayOptionalInputMethod();
     void SubscribeCommonEvent();
-    int32_t Switch(int32_t userId, const std::string &bundleName, const std::shared_ptr<ImeInfo> &info);
-    int32_t SwitchExtension(int32_t userId, const std::shared_ptr<ImeInfo> &info);
-    int32_t SwitchSubType(int32_t userId, const std::shared_ptr<ImeInfo> &info);
     int32_t SwitchInputType(int32_t userId, const SwitchInfo &switchInfo, bool isPersistence = true);
     void GetValidSubtype(const std::string &subName, const std::shared_ptr<ImeInfo> &info);
     ServiceRunningState state_;

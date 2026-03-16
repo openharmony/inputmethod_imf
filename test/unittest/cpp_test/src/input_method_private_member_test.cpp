@@ -15,7 +15,6 @@
 #define private public
 #define protected public
 #include "full_ime_info_manager.h"
-#include "ime_cfg_manager.h"
 #include "ime_info_inquirer.h"
 #include "input_method_agent_service_impl.h"
 #include "input_method_core_service_impl.h"
@@ -50,7 +49,7 @@
 #include "iinput_method_agent.h"
 #include "iinput_method_core.h"
 #include "im_common_event_manager.h"
-#include "ime_cfg_manager.h"
+
 #include "input_client_service_impl.h"
 #include "input_client_stub.h"
 #include "input_method_ability.h"
@@ -127,7 +126,6 @@ void InputMethodPrivateMemberTest::TearDownTestCase(void)
 void InputMethodPrivateMemberTest::SetUp(void)
 {
     IMSA_HILOGI("InputMethodPrivateMemberTest::SetUp");
-    ImeCfgManager::GetInstance().imeConfigs_.clear();
     FullImeInfoManager::GetInstance().fullImeInfos_.clear();
     ImeEnabledInfoManager::GetInstance().imeEnabledCfg_.clear();
     service_->userId_ = MAIN_USER_ID;
@@ -136,7 +134,6 @@ void InputMethodPrivateMemberTest::SetUp(void)
 void InputMethodPrivateMemberTest::TearDown(void)
 {
     IMSA_HILOGI("InputMethodPrivateMemberTest::TearDown");
-    ImeCfgManager::GetInstance().imeConfigs_.clear();
     FullImeInfoManager::GetInstance().fullImeInfos_.clear();
     ImeEnabledInfoManager::GetInstance().imeEnabledCfg_.clear();
 }
@@ -366,21 +363,6 @@ HWTEST_F(InputMethodPrivateMemberTest, PerUserSessionParameterNullptr001, TestSi
     EXPECT_EQ(client, nullptr);
 }
 
-/**
- * @tc.name: SA_ImeCfgManagerTest_002
- * @tc.desc: getImeCfg failed
- * @tc.type: FUNC
- * @tc.require:
- * @tc.author: chenyu
- */
-HWTEST_F(InputMethodPrivateMemberTest, SA_ImeCfgManagerTest_002, TestSize.Level0)
-{
-    IMSA_HILOGI("InputMethodPrivateMemberTest SA_ImeCfgManagerTest_002 TEST START");
-    ImeCfgManager cfgManager;
-    auto cfg = cfgManager.GetImeCfg(100);
-    EXPECT_TRUE(cfg.currentSubName.empty());
-    EXPECT_TRUE(cfg.currentIme.empty());
-}
 
 /**
  * @tc.name: SA_SwitchByCombinationKey_001
@@ -798,21 +780,6 @@ HWTEST_F(InputMethodPrivateMemberTest, III_TestIsNewExtInfos_001, TestSize.Level
 }
 
 /**
- * @tc.name: ICM_TestDeleteImeCfg_001
- * @tc.desc: delete ime cfg correctly
- * @tc.type: FUNC
- * @tc.require:
- * @tc.author: chenyu
- */
-HWTEST_F(InputMethodPrivateMemberTest, ICM_TestDeleteImeCfg_001, TestSize.Level0)
-{
-    IMSA_HILOGI("InputMethodPrivateMemberTest ICM_TestDeleteImeCfg_001 TEST START");
-    ImeCfgManager::GetInstance().imeConfigs_.push_back({ 100, "testBundleName", "testSubName", false });
-    ImeCfgManager::GetInstance().DeleteImeCfg(100);
-    EXPECT_TRUE(ImeCfgManager::GetInstance().imeConfigs_.empty());
-}
-
-/**
  * @tc.name: WMSConnectObserver_001
  * @tc.desc:
  * @tc.type: FUNC
@@ -997,7 +964,6 @@ HWTEST_F(InputMethodPrivateMemberTest, TestHandlePackageEvent, TestSize.Level0)
     //remove bundle not current ime
     auto parcel3 = new (std::nothrow) MessageParcel();
     service_->userId_ = userId;
-    ImeCfgManager::GetInstance().imeConfigs_.push_back({ 60, "testBundleName/testExtName", "testSubName", false });
     parcel3->WriteInt32(userId);
     parcel3->WriteString(bundleName);
     auto msg3 = std::make_shared<Message>(MessageID::MSG_ID_PACKAGE_REMOVED, parcel3);
@@ -1356,10 +1322,6 @@ HWTEST_F(InputMethodPrivateMemberTest, BranchCoverage001, TestSize.Level0)
     ret2 = service_->SwitchInputMethod(bundleName, subName, static_cast<uint32_t>(trigger), -1);
     EXPECT_EQ(ret2, ErrorCode::ERROR_BAD_PARAMETERS);
 
-    const std::shared_ptr<ImeInfo> info = nullptr;
-    ret2 = service_->SwitchSubType(INVALID_USER_ID, info);
-    EXPECT_NE(ret2, ErrorCode::NO_ERROR);
-
     const SwitchInfo switchInfo;
     ret2 = service_->SwitchInputType(INVALID_USER_ID, switchInfo);
     EXPECT_NE(ret2, ErrorCode::NO_ERROR);
@@ -1581,7 +1543,7 @@ HWTEST_F(InputMethodPrivateMemberTest, SA_TestPerUserSessionOnScreenUnlocked, Te
     userSession->InitRealImeData({ "", "" });
     userSession->OnScreenUnlock();
 
-    auto imeCfg = ImeCfgManager::GetInstance().GetCurrentImeCfg(MAIN_USER_ID);
+    auto imeCfg = ImeEnabledInfoManager::GetInstance().GetCurrentImeCfg(MAIN_USER_ID);
     EXPECT_NE(imeCfg, nullptr);
     userSession->realImeData_ = nullptr;
     userSession->InitRealImeData({ imeCfg->bundleName, imeCfg->extName });
@@ -3059,7 +3021,7 @@ HWTEST_F(InputMethodPrivateMemberTest, SA_TestOnPackageUpdated, TestSize.Level0)
     EXPECT_EQ(ret, ErrorCode::ERROR_PACKAGE_MANAGER);
 
     // not current userId
-    auto imeCfg = ImeCfgManager::GetInstance().GetCurrentImeCfg(MAIN_USER_ID);
+    auto imeCfg = ImeEnabledInfoManager::GetInstance().GetCurrentImeCfg(MAIN_USER_ID);
     ASSERT_NE(imeCfg, nullptr);
     InputMethodPrivateMemberTest::service_->userId_ = userId;
     ret = InputMethodPrivateMemberTest::service_->OnPackageUpdated(MAIN_USER_ID, imeCfg->bundleName);
@@ -3088,7 +3050,7 @@ HWTEST_F(InputMethodPrivateMemberTest, PerUserSession_OnPackageUpdated, TestSize
 
     // attaching, no need
     userSession->attachingCount_ = 1;
-    auto imeCfg = ImeCfgManager::GetInstance().GetCurrentImeCfg(MAIN_USER_ID);
+    auto imeCfg = ImeEnabledInfoManager::GetInstance().GetCurrentImeCfg(MAIN_USER_ID);
     ASSERT_NE(imeCfg, nullptr);
     ret = userSession->OnPackageUpdated(imeCfg->bundleName);
     EXPECT_EQ(ret, ErrorCode::NO_ERROR);
@@ -4506,6 +4468,44 @@ HWTEST_F(InputMethodPrivateMemberTest, PerUserSession_HandleFirstStart_StopCurre
 
     auto ret = userSession->HandleFirstStart(ime, true);
     EXPECT_EQ(ret, ErrorCode::NO_ERROR);
+}
+
+/**
+ * @tc.name: PerUserSession_NotifyImeChangedToClients_001
+ * @tc.desc: Test PerUserSession_NotifyImeChangedToClients_001
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(InputMethodPrivateMemberTest, PerUserSession_NotifyImeChangedToClients_001, TestSize.Level0)
+{
+    IMSA_HILOGI("InputMethodPrivateMemberTest::PerUserSession_NotifyImeChangedToClients_001 start.");
+    ImeEnabledInfo enabledInfo{ "", "extName1", EnabledStatus::BASIC_MODE };
+    enabledInfo.extraInfo.isDefaultIme = true;
+    ImeEnabledCfg cfg;
+    cfg.enabledInfos.push_back(enabledInfo);
+    ImeEnabledInfoManager::GetInstance().imeEnabledCfg_.insert_or_assign(MAIN_USER_ID, cfg);
+    auto userSession = std::make_shared<PerUserSession>(MAIN_USER_ID);
+    auto ret = userSession->NotifyImeChangedToClients();
+    EXPECT_EQ(ret, ErrorCode::ERROR_IME_NOT_STARTED);
+}
+
+/**
+ * @tc.name: PerUserSession_NotifyImeChangedToClients_002
+ * @tc.desc: Test PerUserSession_NotifyImeChangedToClients_002
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(InputMethodPrivateMemberTest, PerUserSession_NotifyImeChangedToClients_002, TestSize.Level0)
+{
+    IMSA_HILOGI("InputMethodPrivateMemberTest::PerUserSession_NotifyImeChangedToClients_002 start.");
+    ImeEnabledInfo enabledInfo{ "bundleName", "extName1", EnabledStatus::BASIC_MODE };
+    enabledInfo.extraInfo.isDefaultIme = true;
+    ImeEnabledCfg cfg;
+    cfg.enabledInfos.push_back(enabledInfo);
+    ImeEnabledInfoManager::GetInstance().imeEnabledCfg_.insert_or_assign(MAIN_USER_ID, cfg);
+    auto userSession = std::make_shared<PerUserSession>(MAIN_USER_ID);
+    auto ret = userSession->NotifyImeChangedToClients();
+    EXPECT_EQ(ret, ErrorCode::ERROR_IMSA_GET_IME_INFO_FAILED);
 }
 } // namespace MiscServices
 } // namespace OHOS

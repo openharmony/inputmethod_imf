@@ -1964,20 +1964,12 @@ HWTEST_F(InputMethodAbilityTest, BranchCoverage002, TestSize.Level0)
     int32_t vailidUserId = 100001;
     SwitchInfo switchInfo;
     std::string vailidString = "";
-    std::shared_ptr<ImeInfo> info;
     bool needHide = false;
     InputType type = InputType::NONE;
     auto ret = imsa_->OnStartInputType(vailidUserId, switchInfo, true);
     EXPECT_NE(ret, ErrorCode::NO_ERROR);
-
-    ret = imsa_->Switch(vailidUserId, vailidString, info);
-    EXPECT_NE(ret, ErrorCode::NO_ERROR);
-    ret = imsa_->SwitchExtension(vailidUserId, info);
-    EXPECT_EQ(ret, ErrorCode::ERROR_NULL_POINTER);
-    ret = imsa_->SwitchSubType(vailidUserId, info);
     imsa_->IncreaseAttachCount();
     imsa_->NeedHideWhenSwitchInputType(vailidUserId, type, needHide);
-    EXPECT_EQ(ret, ErrorCode::ERROR_NULL_POINTER);
     ret = imsa_->SwitchInputType(vailidUserId, switchInfo);
     EXPECT_EQ(ret, ErrorCode::ERROR_IMSA_USER_SESSION_NOT_FOUND);
     ret = imsa_->OnPackageRemoved(vailidUserId, vailidString);
@@ -2388,7 +2380,6 @@ HWTEST_F(InputMethodAbilityTest, testClearBindInfo, TestSize.Level0)
 HWTEST_F(InputMethodAbilityTest, TestServiceHandler_, TestSize.Level0)
 {
     IMSA_HILOGI("InputMethodAbilityTest testServiceHandler_ START");
-    int32_t userId = 100;
     string subName = "";
     auto temp = imsa_->serviceHandler_;
     imsa_->serviceHandler_ = nullptr;
@@ -2401,12 +2392,9 @@ HWTEST_F(InputMethodAbilityTest, TestServiceHandler_, TestSize.Level0)
     imsa_->GetValidSubtype(subName, info);
 
     EXPECT_EQ(imsa_->serviceHandler_, nullptr);
-    auto ret = imsa_->SwitchExtension(userId, nullptr);
-    EXPECT_EQ(ret, ErrorCode::ERROR_NULL_POINTER);
-    ret = imsa_->SwitchExtension(userId, info);
     MessageParcel *parcel1 = new (std::nothrow) MessageParcel();
     auto msg = std::make_shared<Message>(MessageID::MSG_ID_USER_START, parcel1);
-    ret = imsa_->OnUserStarted(msg.get());
+    auto ret = imsa_->OnUserStarted(msg.get());
     msg.reset();
     ret = imsa_->OnUserStarted(msg.get());
     EXPECT_EQ(ret, ErrorCode::ERROR_NULL_POINTER);

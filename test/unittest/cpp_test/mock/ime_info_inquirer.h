@@ -39,7 +39,6 @@ struct ImeNativeCfg {
 struct SystemConfig {
     std::string systemInputMethodConfigAbility;
     std::string defaultInputMethod;
-    std::string systemSpecialInputMethod;
     bool enableInputMethodFeature = false;
     bool enableFullExperienceFeature = false;
     EnabledStatus initEnabledState{ EnabledStatus::DISABLED };
@@ -98,7 +97,6 @@ public:
     bool IsSpecialSaUid(int32_t callingUid);
     void InitSystemConfig();
     SystemConfig GetSystemConfig();
-    std::string GetSystemSpecialIme();
     bool IsInputMethod(int32_t userId, const std::string &bundleName);
     bool IsRunningIme(int32_t userId, const std::string &bundleName);
     std::vector<std::string> GetRunningIme(int32_t userId);
