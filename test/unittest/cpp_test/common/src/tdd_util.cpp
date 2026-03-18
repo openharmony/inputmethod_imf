@@ -459,7 +459,6 @@ void TddUtil::InitCurrentImePermissionInfo()
     }
     currentBundleNameMock_ = property->name;
     session->InitRealImeData({ property->name, property->id });
-    };
 }
 
 void TddUtil::EnabledAllIme()

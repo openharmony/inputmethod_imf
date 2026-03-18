@@ -23,6 +23,7 @@
 #include "event_status_manager.h"
 #include "iinput_method_core.h"
 #include "ime_connection.h"
+#include "ime_enabled_info_manager.h"
 #include "ime_state_manager.h"
 #include "input_method_client_types.h"
 #include "input_method_types.h"
@@ -119,6 +120,8 @@ public:
     void OnHideSoftKeyBoardSelf();
     int32_t SwitchSubtype(const SubProperty &subProperty);
     int32_t SwitchSubtypeWithoutStartIme(const SubProperty &subProperty);
+    void OnScbStarted(bool isScbReboot);
+    void OnScbStopped();
     void OnFocused(uint64_t displayId, int32_t pid, int32_t uid);
     void OnUnfocused(uint64_t displayId, int32_t pid, int32_t uid);
     void OnScreenUnlock();
@@ -184,6 +187,7 @@ public:
     std::pair<std::shared_ptr<ClientGroup>, std::shared_ptr<InputClientInfo>> GetClientBySelfPid(pid_t clientPid);
     std::pair<std::shared_ptr<ClientGroup>, std::shared_ptr<InputClientInfo>> GetClientBySelfPidOrHostPid(
         pid_t clientPid);
+    bool IsImeInUse();
     void SetSwitchInputType(bool isSwitchInputType);
     int32_t NotifyImeChangedToClients();
 

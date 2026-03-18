@@ -17,6 +17,7 @@
 #define SERVICES_INCLUDE_IME_INFO_ENQUIRER_H
 
 #include "bundle_mgr_proxy.h"
+#include "ime_enabled_info_manager.h"
 #include "input_method_info.h"
 #include "input_method_property.h"
 #include "resource_manager.h"

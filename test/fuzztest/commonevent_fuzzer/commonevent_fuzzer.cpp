@@ -72,7 +72,7 @@ void FuzzSwitchOperation(FuzzedDataProvider &provider)
     bool fuzzedBool = provider.ConsumeBool();
     std::string fuzzedString = provider.ConsumeRandomLengthString();
 
-    DelayedSingleton<InputMethodSystemAbility>::GetInstance()->UpdateUserInfo(fuzzedInt32);
+    DelayedSingleton<InputMethodSystemAbility>::GetInstance()->UpdateUserInfo(fuzzedInt32, fuzzedUint64);
  
     DelayedSingleton<InputMethodSystemAbility>::GetInstance()->RegisterProxyIme(fuzzedUint64, core, remoteObject);
     DelayedSingleton<InputMethodSystemAbility>::GetInstance()->HandleFocusChanged(fuzzedBool,
@@ -89,7 +89,6 @@ void FuzzHandleOperation(FuzzedDataProvider &provider)
     bool fuzzedBool = provider.ConsumeBool();
     std::string fuzzedString = provider.ConsumeRandomLengthString();
  
-    DelayedSingleton<InputMethodSystemAbility>::GetInstance()->HandleScbStarted(fuzzedInt32, fuzzedInt32);
     DelayedSingleton<InputMethodSystemAbility>::GetInstance()->HandleWmsDisconnected(fuzzedInt32, fuzzedInt32);
     DelayedSingleton<InputMethodSystemAbility>::GetInstance()->NeedHideWhenSwitchInputType(fuzzedInt32, inputType,
         fuzzedBool);
