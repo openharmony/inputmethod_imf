@@ -20,7 +20,6 @@
 #include "bundle_mgr_client.h"
 #include "display_adapter.h"
 #include "full_ime_info_manager.h"
-#include "ime_enabled_info_manager.h"
 #include "input_type_manager.h"
 #include "iservice_registry.h"
 #include "locale_config.h"
@@ -232,6 +231,9 @@ std::string ImeInfoInquirer::GetDumpInfo(int32_t userId)
         return "";
     }
     auto currentImeCfg = ImeEnabledInfoManager::GetInstance().GetCurrentImeCfg(userId);
+    if (currentImeCfg == nullptr) {
+        return "";
+    }
     bool isBegin = true;
     std::string params = "{\"imeList\":[";
     for (const auto &property : properties) {
@@ -422,7 +424,11 @@ int32_t ImeInfoInquirer::ListInputMethodSubtype(int32_t userId, const std::strin
 
 int32_t ImeInfoInquirer::ListCurrentInputMethodSubtype(int32_t userId, std::vector<SubProperty> &subProps)
 {
+    subProps = {};
     auto currentImeCfg = ImeEnabledInfoManager::GetInstance().GetCurrentImeCfg(userId);
+    if (currentImeCfg == nullptr) {
+        return ErrorCode::ERROR_IME_NOT_STARTED;
+    }
     IMSA_HILOGD("currentIme: %{public}s.", currentImeCfg->imeId.c_str());
     return ListInputMethodSubtype(userId, currentImeCfg->bundleName, subProps);
 }
@@ -687,6 +693,9 @@ std::shared_ptr<Property> ImeInfoInquirer::GetImeProperty(
 std::shared_ptr<Property> ImeInfoInquirer::GetCurrentInputMethod(int32_t userId)
 {
     auto currentImeCfg = ImeEnabledInfoManager::GetInstance().GetCurrentImeCfg(userId);
+    if (currentImeCfg == nullptr) {
+        return nullptr;
+    }
     IMSA_HILOGD("currentIme: %{public}s.", currentImeCfg->imeId.c_str());
     FullImeInfo imeInfo;
     if (FullImeInfoManager::GetInstance().Get(userId, currentImeCfg->bundleName, imeInfo)) {
@@ -702,6 +711,9 @@ std::shared_ptr<Property> ImeInfoInquirer::GetCurrentInputMethod(int32_t userId)
 std::shared_ptr<SubProperty> ImeInfoInquirer::GetCurrentSubtype(int32_t userId)
 {
     auto currentIme = ImeEnabledInfoManager::GetInstance().GetCurrentImeCfg(userId);
+    if (currentIme == nullptr) {
+        return nullptr;
+    }
     IMSA_HILOGD("currentIme: %{public}s.", currentIme->imeId.c_str());
     FullImeInfo imeInfo;
     if (FullImeInfoManager::GetInstance().Get(userId, currentIme->bundleName, imeInfo) && !imeInfo.subProps.empty()) {
@@ -756,6 +768,9 @@ bool ImeInfoInquirer::IsImeInstalled(const int32_t userId, const std::string &bu
 std::shared_ptr<ImeNativeCfg> ImeInfoInquirer::GetImeToStart(int32_t userId)
 {
     auto currentImeCfg = ImeEnabledInfoManager::GetInstance().GetCurrentImeCfg(userId);
+    if (currentImeCfg == nullptr) {
+        return nullptr;
+    }
     IMSA_HILOGD("userId: %{public}d, currentIme: %{public}s.", userId, currentImeCfg->imeId.c_str());
     if (currentImeCfg->imeId.empty() || !IsImeInstalled(userId, currentImeCfg->bundleName, currentImeCfg->extName)) {
         auto newIme = GetDefaultIme();
