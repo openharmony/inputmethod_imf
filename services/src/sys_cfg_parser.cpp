@@ -33,6 +33,19 @@ bool SysCfgParser::ParseSystemConfig(SystemConfig &systemConfig)
     return ret;
 }
 
+bool SysCfgParser::ParseProductConfig(ProductConfig &productConfig)
+{
+    auto content = GetSysCfgContent(GET_NAME(productConfig));
+    if (content.empty()) {
+        IMSA_HILOGE("content is empty");
+        return false;
+    }
+    ImeProductConfig imeProductConfig;
+    auto ret = imeProductConfig.Unmarshall(content);
+    productConfig = imeProductConfig.productConfig;
+    return ret;
+}
+
 bool SysCfgParser::ParseInputType(std::vector<InputTypeInfo> &inputType)
 {
     auto content = GetSysCfgContent(GET_NAME(supportedInputTypeList));

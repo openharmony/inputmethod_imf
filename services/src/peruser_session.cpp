@@ -255,10 +255,11 @@ void PerUserSession::OnImeDied(const sptr<IInputMethodCore> &remote, ImeType typ
         return;
     }
     if (type == ImeType::IME && currentImeInfo->bundleName == defaultImeInfo->name) {
-        if (!SystemParamAdapter::GetInstance().GetBoolParam(SystemParamAdapter::MEMORY_WATERMARK_KEY)) {
-            StartImeInImeDied();
-        } else {
+        if (ImeInfoInquirer::GetInstance().IsMemoryWatermarkEnabled() &&
+            SystemParamAdapter::GetInstance().GetBoolParam(SystemParamAdapter::MEMORY_WATERMARK_KEY)) {
             isBlockStartedByLowMem_.store(true);
+        } else {
+            StartImeInImeDied();
         }
     }
 }
