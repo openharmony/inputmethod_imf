@@ -407,6 +407,7 @@ int32_t InputMethodSystemAbility::Init()
     IMSA_HILOGI("publish success");
     state_ = ServiceRunningState::STATE_RUNNING;
     ImeInfoInquirer::GetInstance().InitSystemConfig();
+    ImeInfoInquirer::GetInstance().InitProductConfig();
     ImeInfoInquirer::GetInstance().InitDynamicStartImeCfg();
     ImeStateManagerFactory::GetInstance().SetDynamicStartIme(ImeInfoInquirer::GetInstance().IsDynamicStartIme());
 #endif
@@ -2899,7 +2900,9 @@ void InputMethodSystemAbility::HandleMemStarted()
     IMSA_HILOGI("MemMgr start.");
     Memory::MemMgrClient::GetInstance().NotifyProcessStatus(getpid(), 1, 1, INPUT_METHOD_SYSTEM_ABILITY_ID);
     Memory::MemMgrClient::GetInstance().SetCritical(getpid(), true, INPUT_METHOD_SYSTEM_ABILITY_ID);
-    SystemParamAdapter::GetInstance().WatchParam(SystemParamAdapter::MEMORY_WATERMARK_KEY);
+    if (ImeInfoInquirer::GetInstance().IsMemoryWatermarkEnabled()) {
+        SystemParamAdapter::GetInstance().WatchParam(SystemParamAdapter::MEMORY_WATERMARK_KEY);
+    }
     ResetAllImes();
 }
 
