@@ -60,6 +60,15 @@ void ImeInfoInquirer::InitSystemConfig()
     }
 }
 
+void ImeInfoInquirer::InitProductConfig()
+{
+    auto ret = SysCfgParser::ParseProductConfig(productConfig_);
+    if (!ret) {
+        IMSA_HILOGE("parse productConfig failed!");
+        return;
+    }
+}
+
 void ImeInfoInquirer::InitDynamicStartImeCfg()
 {
     if (!SysCfgParser::ParseDynamicStartImeCfg(dynamicStartImeList_)) {
@@ -96,6 +105,11 @@ bool ImeInfoInquirer::IsProxyIme(int32_t callingUid)
 bool ImeInfoInquirer::IsSpecialSaUid(int32_t callingUid)
 {
     return systemConfig_.specialSaUidList.find(callingUid) != systemConfig_.specialSaUidList.end();
+}
+
+bool ImeInfoInquirer::IsMemoryWatermarkEnabled()
+{
+    return !productConfig_.disabledMemoryWatermark;
 }
 
 SystemConfig ImeInfoInquirer::GetSystemConfig()
