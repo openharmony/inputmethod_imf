@@ -92,7 +92,9 @@ public:
     bool IsEnableNumKey();
     bool IsProxyIme(int32_t callingUid);
     bool IsSpecialSaUid(int32_t callingUid);
+    bool IsMemoryWatermarkEnabled();
     void InitSystemConfig();
+    void InitProductConfig();
     void InitDynamicStartImeCfg();
     SystemConfig GetSystemConfig();
     ImeNativeCfg GetDefaultIme();
@@ -153,6 +155,7 @@ private:
         FullImeInfo &imeInfo, bool needBrief = false);
 
     SystemConfig systemConfig_;
+    ProductConfig productConfig_;
     std::vector<DynamicStartImeCfgItem> dynamicStartImeList_;
     bool IsTempInputMethod(const OHOS::AppExecFwk::ExtensionAbilityInfo &extInfo);
 };
