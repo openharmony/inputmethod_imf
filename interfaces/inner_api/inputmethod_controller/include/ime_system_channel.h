@@ -77,15 +77,6 @@ public:
         const std::unordered_map<std::string, PrivateDataValue> &privateCommand,
         bool validateDefaultIme = true) override;
 
-    /**
-     * @brief Get smart menue config from default input method.
-     *
-     * This function is used to get smart menue config from default input method.
-     *.
-     * @return string.
-     * @since 12
-     */
-    IMF_API std::string GetSmartMenuCfg(int32_t userId = ImfCommonConst::DEFAULT_USER_ID);
     int32_t ReceivePrivateCommand(
         const std::unordered_map<std::string, PrivateDataValue> &privateCommand) override;
     int32_t NotifyPanelStatus(const SysPanelStatus &sysPanelStatus);
@@ -104,6 +95,7 @@ private:
     sptr<OnSystemCmdListener> GetSystemCmdListener();
     void ClearSystemCmdAgent();
     void GetExtensionInfo(std::vector<ExtensionAbilityInfo> extensionInfos, ExtensionAbilityInfo &extInfo);
+    void GetSmartMenuConfig();
     void OnSystemCmdAgentDied(const wptr<IRemoteObject> &remote);
 
     static std::mutex instanceLock_;
