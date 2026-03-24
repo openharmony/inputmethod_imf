@@ -38,7 +38,6 @@ napi_value JsKeyboardPanelManager::Init(napi_env env, napi_value info)
 {
     napi_property_descriptor descriptor[] = {
         DECLARE_NAPI_FUNCTION("sendPrivateCommand", SendPrivateCommand),
-        DECLARE_NAPI_FUNCTION("getSmartMenuCfg", GetSmartMenuCfg),
         DECLARE_NAPI_FUNCTION("on", Subscribe),
         DECLARE_NAPI_FUNCTION("off", UnSubscribe),
         DECLARE_NAPI_FUNCTION("getDefaultInputMethod", GetDefaultInputMethod),
@@ -209,30 +208,6 @@ void JsKeyboardPanelManager::UnRegisterListener(napi_value callback, std::string
     }
 }
 
-napi_value JsKeyboardPanelManager::GetSmartMenuCfg(napi_env env, napi_callback_info info)
-{
-    auto ctxt = std::make_shared<SmartMenuContext>();
-    auto output = [ctxt](napi_env env, napi_value *result) -> napi_status {
-        *result = JsUtil::GetValue(env, ctxt->smartMenu);
-        return napi_ok;
-    };
-    auto exec = [ctxt](AsyncCall::Context *ctx) {
-        auto channel = ImeSystemCmdChannel::GetInstance();
-        if (channel == nullptr) {
-            ctxt->SetState(napi_generic_failure);
-            ctxt->smartMenu = {};
-            ctxt->SetErrorCode(ErrorCode::ERROR_NULL_POINTER);
-            return;
-        }
-        ctxt->smartMenu = channel->GetSmartMenuCfg();
-        ctxt->SetState(napi_ok);
-    };
-    ctxt->SetAction(nullptr, std::move(output));
-    // 1 means JsAPI:displayOptionalInputMethod has 1 params at most.
-    AsyncCall asyncCall(env, info, ctxt, 1);
-    return asyncCall.Call(env, exec, "GetSmartMenuCfg");
-}
-
 napi_value JsKeyboardPanelManager::SendPrivateCommand(napi_env env, napi_callback_info info)
 {
     auto ctxt = std::make_shared<SendPrivateCommandContext>();
@@ -401,17 +376,6 @@ std::shared_ptr<JsKeyboardPanelManager::UvEntry> JsKeyboardPanelManager::GetEntr
         entrySetter(*entry);
     }
     return entry;
-}
-
-napi_value JsPanelShadow::Write(napi_env env, const Shadow &in)
-{
-    napi_value jsObject = nullptr;
-    napi_create_object(env, &jsObject);
-    bool ret = JsUtil::Object::WriteProperty(env, jsObject, "radius", in.radius);
-    ret = ret && JsUtil::Object::WriteProperty(env, jsObject, "color", in.color);
-    ret = ret && JsUtil::Object::WriteProperty(env, jsObject, "offsetX", in.offsetX);
-    ret = ret && JsUtil::Object::WriteProperty(env, jsObject, "offsetY", in.offsetY);
-    return ret ? jsObject : JsUtil::Const::Null(env);
 }
 
 napi_value JsPanelStatus::Write(napi_env env, const SysPanelStatus &in)
