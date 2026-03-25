@@ -678,9 +678,10 @@ int32_t ImeEnabledInfoManager::SetTmpIme(int32_t userId, const std::string &imeI
     return ErrorCode::NO_ERROR;
 }
 
-std::shared_ptr<ImeNativeCfg> ImeEnabledInfoManager::GetCurrentImeCfg(int32_t userId)
+std::shared_ptr<ImeNativeCfg> ImeEnabledInfoManager::GetCurrentImeCfgInner(int32_t userId, bool &isCurrentImeSet)
 {
     std::lock_guard<std::mutex> lock(operateLock_);
+    isCurrentImeSet = true;
     ImeEnabledCfg enabledCfg;
     auto ret = GetEnabledCacheWithCorrect(userId, enabledCfg);
     if (ret != ErrorCode::NO_ERROR) {
@@ -708,8 +709,30 @@ std::shared_ptr<ImeNativeCfg> ImeEnabledInfoManager::GetCurrentImeCfg(int32_t us
         nativeInfo.subName = iter->extraInfo.currentSubName;
         return std::make_shared<ImeNativeCfg>(nativeInfo);
     }
+    isCurrentImeSet = false;
     IMSA_HILOGI("%{public}d not set default ime.", userId);
     return std::make_shared<ImeNativeCfg>();
+}
+
+std::shared_ptr<ImeNativeCfg> ImeEnabledInfoManager::GetCurrentImeCfg(int32_t userId)
+{
+    bool isCurrentImeSet = false;
+    return GetCurrentImeCfgInner(userId, isCurrentImeSet);
+}
+
+std::shared_ptr<ImeNativeCfg> ImeEnabledInfoManager::GetCurrentImeCfgWithCorrect(int32_t userId)
+{
+    bool isCurrentImeSet = false;
+    auto currentImeCfg = ImeEnabledInfoManager::GetInstance().GetCurrentImeCfgInner(userId, isCurrentImeSet);
+    if (!isCurrentImeSet) {
+        IMSA_HILOGI("currentIme not found!");
+        currentImeCfg = ImeInfoInquirer::GetInstance().GetDefaultImeCfg();
+        if (currentImeCfg == nullptr) {
+            return nullptr;
+        }
+        IMSA_HILOGI("currentIme is %{public}s.", currentImeCfg->bundleName.c_str());
+    }
+    return currentImeCfg;
 }
 
 ImeNativeCfg ImeEnabledInfoManager::GetUserCfgIme(int32_t userId)
