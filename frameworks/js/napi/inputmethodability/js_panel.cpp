@@ -648,6 +648,7 @@ void JsPanel::AdjustEnhancedLayoutParam(std::shared_ptr<PanelContentContext> ctx
 
 napi_value JsPanel::AdjustPanelRect(napi_env env, napi_callback_info info)
 {
+    IMSA_HILOGI("JsPanel enter!");
     auto ctxt = std::make_shared<PanelContentContext>(env, info);
     auto input = [ctxt](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         PARAM_CHECK_RETURN(env, argc > 1, "at least two parameters is required", TYPE_NONE, napi_generic_failure);

@@ -1694,15 +1694,15 @@ std::shared_ptr<ImeNativeCfg> PerUserSession::GetRealCurrentIme(bool needMinGuar
 
 int32_t PerUserSession::NotifyImeChangedToClients()
 {
-    auto userSpecifiedIme = ImeCfgManager::GetInstance().GetCurrentImeCfg(userId_);
-    if (userSpecifiedIme == nullptr) {
+    auto userSpecifiedIme = ImeEnabledInfoManager::GetInstance().GetUserCfgIme(userId_);
+    if (userSpecifiedIme.bundleName.empty()) {
         IMSA_HILOGW("userSpecifiedIme not find.");
         return ErrorCode::ERROR_IMSA_NULLPTR;
     }
     auto userSpecifiedImeInfo =
-        ImeInfoInquirer::GetInstance().GetImeInfo(userId_, userSpecifiedIme->bundleName, userSpecifiedIme->subName);
+        ImeInfoInquirer::GetInstance().GetImeInfo(userId_, userSpecifiedIme.bundleName, userSpecifiedIme.subName);
     if (userSpecifiedImeInfo == nullptr) {
-        IMSA_HILOGE("userSpecifiedIme:%{public}s not find.", userSpecifiedIme->bundleName.c_str());
+        IMSA_HILOGE("userSpecifiedIme:%{public}s not find.", userSpecifiedIme.bundleName.c_str());
         return ErrorCode::ERROR_IMSA_GET_IME_INFO_FAILED;
     }
     NotifyImeChangeToClients(userSpecifiedImeInfo->prop, userSpecifiedImeInfo->subProp);
