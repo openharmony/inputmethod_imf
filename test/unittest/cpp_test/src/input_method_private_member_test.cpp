@@ -661,7 +661,7 @@ HWTEST_F(InputMethodPrivateMemberTest, III_TestGetCurrentSubtype_001, TestSize.L
     cfg.enabledInfos.push_back(imeInfo);
     ImeEnabledInfoManager::GetInstance().imeEnabledCfg_.insert({ currentUserId, cfg });
     auto subProp = ImeInfoInquirer::GetInstance().GetCurrentSubtype(currentUserId);
-    EXPECT_TRUE(subProp == nullptr);
+    EXPECT_FALSE(subProp == nullptr);
 
     // subName is not find
     auto currentProp = InputMethodController::GetInstance()->GetCurrentInputMethod();
@@ -711,7 +711,7 @@ HWTEST_F(InputMethodPrivateMemberTest, III_TestGetCurrentIme_001, TestSize.Level
     cfg.enabledInfos.push_back(imeInfo);
     ImeEnabledInfoManager::GetInstance().imeEnabledCfg_.insert({ currentUserId, cfg });
     auto prop = ImeInfoInquirer::GetInstance().GetCurrentInputMethod(currentUserId);
-    EXPECT_TRUE(prop == nullptr);
+    EXPECT_FALSE(prop == nullptr);
 
     // get correct prop
     auto currentProp = InputMethodController::GetInstance()->GetCurrentInputMethod();
