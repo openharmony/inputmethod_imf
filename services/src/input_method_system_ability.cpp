@@ -391,6 +391,7 @@ int32_t InputMethodSystemAbility::Init()
 #ifdef IMF_ON_DEMAND_START_STOP_SA_ENABLE
     ImeCfgManager::GetInstance().Init();
     ImeInfoInquirer::GetInstance().InitSystemConfig();
+    ImeInfoInquirer::GetInstance().InitProductConfig();
     bool isSuccess = Publish(this);
     if (!isSuccess) {
         IMSA_HILOGE("publish failed");
