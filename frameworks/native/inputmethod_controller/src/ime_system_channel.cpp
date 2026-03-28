@@ -97,6 +97,7 @@ int32_t ImeSystemCmdChannel::ConnectSystemCmd(const sptr<OnSystemCmdListener> &l
         IMSA_HILOGD("in connected state.");
         return ErrorCode::NO_ERROR;
     }
+    GetSmartMenuConfig();
     return RunConnectSystemCmd();
 }
 
@@ -239,29 +240,30 @@ int32_t ImeSystemCmdChannel::NotifyPanelStatus(const SysPanelStatus &sysPanelSta
     listener->NotifyPanelStatus(sysPanelStatus);
     return ErrorCode::NO_ERROR;
 }
-// LCOV_EXCL_START
-std::string ImeSystemCmdChannel::GetSmartMenuCfg(int32_t userId)
+
+void ImeSystemCmdChannel::GetSmartMenuConfig()
 {
     std::shared_ptr<Property> defaultIme = nullptr;
-    int32_t ret = GetDefaultImeCfg(defaultIme, userId);
+    int32_t ret = GetDefaultImeCfg(defaultIme);
     if (ret != ErrorCode::NO_ERROR || defaultIme == nullptr) {
         IMSA_HILOGE("failed to GetDefaultInputMethod!");
-        return "";
+        return;
     }
     BundleMgrClient client;
     BundleInfo bundleInfo;
     if (!client.GetBundleInfo(defaultIme->name, BundleFlag::GET_BUNDLE_WITH_EXTENSION_INFO, bundleInfo)) {
         IMSA_HILOGE("failed to GetBundleInfo!");
-        return "";
+        return;
     }
     ExtensionAbilityInfo extInfo;
     GetExtensionInfo(bundleInfo.extensionInfos, extInfo);
     std::vector<std::string> profiles;
     if (!client.GetResConfigFile(extInfo, SMART_MENU_METADATA_NAME, profiles) || profiles.empty()) {
         IMSA_HILOGE("failed to GetResConfigFile!");
-        return "";
+        return;
     }
-    return profiles[0];
+    std::unordered_map<std::string, PrivateDataValue> privateCommand = { { "smartMenu", profiles[0]} };
+    ReceivePrivateCommand(privateCommand);
 }
 
 void ImeSystemCmdChannel::GetExtensionInfo(
