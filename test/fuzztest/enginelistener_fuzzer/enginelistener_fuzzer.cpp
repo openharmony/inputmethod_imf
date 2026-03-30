@@ -39,7 +39,7 @@ constexpr size_t MAX_CALLBACK_TYPE_LENGTH = 100;
 constexpr size_t MAX_STRING_LENGTH = 50;
 constexpr size_t MAX_TASK_NAME_LENGTH = 100;
 constexpr int LISTENER_COUNT = 3;
-} // 
+} // namespace
 
 class FuzzInputMethodEngineListener : public InputMethodEngineListener {
 public:
