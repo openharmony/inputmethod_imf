@@ -34,6 +34,16 @@ namespace OHOS {
 namespace {
 constexpr int32_t PRIVATE_DATA_VALUE = 100;
 constexpr int32_t FUZZER_SUCCESS = 0;
+
+std::shared_ptr<AppExecFwk::EventHandler> CreateFuzzEventHandler()
+{
+    static std::shared_ptr<AppExecFwk::EventRunner> runner =
+        AppExecFwk::EventRunner::Create("fuzzTextListenerHandler");
+    if (runner == nullptr) {
+        return nullptr;
+    }
+    return std::make_shared<AppExecFwk::EventHandler>(runner);
+}
 }
 
 class FuzzTextListener : public TextListener {
@@ -165,9 +175,10 @@ void FuzzOnTextChangedListenerMethods(FuzzedDataProvider &provider)
     auto fuzzInt32 = provider.ConsumeIntegral<int32_t>();
     auto fuzzBool = provider.ConsumeBool();
     
-    std::shared_ptr<AppExecFwk::EventRunner> runner =
-        AppExecFwk::EventRunner::Create("fuzzHandler");
-    auto handler = std::make_shared<AppExecFwk::EventHandler>(runner);
+    auto handler = CreateFuzzEventHandler();
+    if (handler == nullptr) {
+        return;
+    }
     sptr<FuzzTextListener> listener(new (std::nothrow) FuzzTextListener(handler));
 
     if (listener == nullptr) {
@@ -202,9 +213,10 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     }
 
     FuzzedDataProvider provider(data, size);
-    std::shared_ptr<OHOS::AppExecFwk::EventRunner> runner =
-        OHOS::AppExecFwk::EventRunner::Create("fuzzTextListenerHandler");
-    auto handler = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
+    auto handler = OHOS::CreateFuzzEventHandler();
+    if (handler == nullptr) {
+        return OHOS::FUZZER_SUCCESS;
+    }
     
     OHOS::sptr<OHOS::FuzzTextListener> listener(new (std::nothrow) OHOS::FuzzTextListener(handler));
 
