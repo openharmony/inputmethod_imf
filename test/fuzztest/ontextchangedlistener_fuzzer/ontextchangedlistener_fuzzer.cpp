@@ -168,8 +168,8 @@ void FuzzOnTextChangedListenerMethods(FuzzedDataProvider &provider)
     std::shared_ptr<AppExecFwk::EventRunner> runner =
         AppExecFwk::EventRunner::Create("fuzzHandler");
     auto handler = std::make_shared<AppExecFwk::EventHandler>(runner);
-    sptr<FuzzTextListener> listener =
-        new (std::nothrow) FuzzTextListener(handler);
+    sptr<FuzzTextListener> listener(new (std::nothrow) FuzzTextListener(handler));
+
     if (listener == nullptr) {
         return;
     }
@@ -205,8 +205,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     std::shared_ptr<OHOS::AppExecFwk::EventRunner> runner =
         OHOS::AppExecFwk::EventRunner::Create("fuzzTextListenerHandler");
     auto handler = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
-    OHOS::sptr<OHOS::FuzzTextListener> listener =
-        new (std::nothrow) OHOS::FuzzTextListener(handler);
+    
+    OHOS::sptr<OHOS::FuzzTextListener> listener(new (std::nothrow) OHOS::FuzzTextListener(handler));
+
     if (listener == nullptr) {
         return OHOS::FUZZER_SUCCESS;
     }
