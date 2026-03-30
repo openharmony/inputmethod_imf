@@ -141,10 +141,17 @@ void FuzzSetPreviewText(sptr<FuzzTextListener> listener, FuzzedDataProvider &pro
 void FuzzInputMethodControllerWithListener(sptr<InputMethodController> imc,
     sptr<FuzzTextListener> listener, FuzzedDataProvider &provider)
 {
+    if (imc == nullptr || listener == nullptr) {
+        return;
+    }
+
     std::string fuzzedString = provider.ConsumeRandomLengthString();
     std::u16string fuzzedU16String(fuzzedString.begin(), fuzzedString.end());
     auto fuzzInt32 = provider.ConsumeIntegral<int32_t>();
     auto fuzzBool = provider.ConsumeBool();
+
+    // Attach listener first so controller APIs can exercise listener-controller interaction paths.
+    (void)imc->Attach(listener, fuzzBool);
 
     imc->InsertText(fuzzedU16String);
     imc->DeleteForward(fuzzInt32);
@@ -166,6 +173,8 @@ void FuzzInputMethodControllerWithListener(sptr<InputMethodController> imc,
     privateCommand.emplace("key1", fuzzedString);
     privateCommand.emplace("key2", fuzzInt32);
     imc->ReceivePrivateCommand(privateCommand);
+
+    (void)imc->Close();
 }
 
 void FuzzOnTextChangedListenerMethods(FuzzedDataProvider &provider)
