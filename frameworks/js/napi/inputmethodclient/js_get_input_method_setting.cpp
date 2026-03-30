@@ -71,6 +71,7 @@ napi_value JsGetInputMethodSetting::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("isPanelShown", IsPanelShown),
         DECLARE_NAPI_FUNCTION("enableInputMethod", EnableInputMethod),
         DECLARE_NAPI_FUNCTION("getInputMethodState", GetInputMethodState),
+        DECLARE_NAPI_FUNCTION("getCursorInfo", GetCursorInfo),
         DECLARE_NAPI_FUNCTION("on", Subscribe),
         DECLARE_NAPI_FUNCTION("off", UnSubscribe),
         DECLARE_NAPI_FUNCTION("onImeChangeWithUserId", SubscribeImechange),
@@ -1059,6 +1060,32 @@ void JsGetInputMethodSetting::GetIsUpdateFlag(const std::string &type, bool &isU
             break;
         }
     }
+}
+
+napi_value JsGetInputMethodSetting::GetCursorInfo(napi_env env, napi_callback_info info)
+{
+    IMSA_HILOGD("run in GetCursorInfo");
+    size_t argc = ARGC_ONE;
+    napi_value argv[1] = { nullptr };
+    IMF_CALL(napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
+    int32_t userId = ImfCommonConst::DEFAULT_USER_ID;
+    PARAM_CHECK_RETURN(env, argc < ARGC_TWO, "too many parameters!", TYPE_NONE, JsUtil::Const::Null(env));
+    if (argc > 0) {
+        PARAM_CHECK_RETURN(env, JsUtils::GetValue(env, argv[0], userId) == napi_ok, "userId type must be int32_t!",
+                TYPE_NONE, JsUtil::Const::Null(env));
+        PARAM_CHECK_RETURN(env, userId >= 0, "userId invaild!", TYPE_NONE, JsUtil::Const::Null(env));
+    }
+    int32_t ret = ErrorCode::ERROR_EX_NULL_POINTER;
+    auto instance = InputMethodController::GetInstance();
+    CursorInfo cursorInfo;
+    if (instance != nullptr) {
+        ret = instance->GetCursorInfo(cursorInfo, userId);
+    }
+    if (ret != ErrorCode::NO_ERROR) {
+        JsUtils::ThrowException(env, JsUtils::Convert(ret), "", TYPE_NONE);
+        return JsUtil::Const::Null(env);
+    }
+    return JsUtils::GetValue(env, cursorInfo);
 }
 } // namespace MiscServices
 } // namespace OHOS

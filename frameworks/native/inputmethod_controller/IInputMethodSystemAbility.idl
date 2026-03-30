@@ -18,6 +18,7 @@ sequenceable input_method_property..OHOS.MiscServices.Property;
 sequenceable input_method_property..OHOS.MiscServices.SubProperty;
 sequenceable input_window_info..OHOS.MiscServices.ImeWindowInfo;
 sequenceable input_method_utils..OHOS.MiscServices.Value;
+sequenceable input_method_utils..OHOS.MiscServices.CursorInfoInner;
 sequenceable panel_info..OHOS.MiscServices.PanelInfo;
 sequenceable element_name..OHOS.AppExecFwk.ElementName;
 sequenceable OHOS.IRemoteObject;
@@ -76,4 +77,5 @@ interface OHOS.MiscServices.IInputMethodSystemAbility {
     void ShowCurrentInput([in]unsigned long displayId, [in] unsigned int type);
     void HideCurrentInput([in]unsigned long displayId);
     void IsPanelShown([in]unsigned long displayId, [in] PanelInfo panelInfo, [out] boolean isShown);
+    void GetCursorInfo([in] int userId, [out] CursorInfoInner cursorInfo);
 }

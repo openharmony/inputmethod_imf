@@ -528,6 +528,18 @@ napi_value JsUtils::GetValue(napi_env env, const Rosen::Rect &in)
     return ret ? jsObject : JsUtil::Const::Null(env);
 }
 
+napi_value JsUtils::GetValue(napi_env env, const CursorInfo &in)
+{
+    napi_value jsObject = nullptr;
+    napi_create_object(env, &jsObject);
+    bool ret = JsUtil::Object::WriteProperty(env, jsObject, "left", in.left);
+    ret = ret && JsUtil::Object::WriteProperty(env, jsObject, "top", in.top);
+    ret = ret && JsUtil::Object::WriteProperty(env, jsObject, "width", in.width);
+    ret = ret && JsUtil::Object::WriteProperty(env, jsObject, "height", in.height);
+    ret = ret && JsUtil::Object::WriteProperty(env, jsObject, "displayId", static_cast<int64_t>(in.displayId));
+    return ret ? jsObject : JsUtil::Const::Null(env);
+}
+
 napi_value JsUtils::GetValue(napi_env env, const std::vector<uint8_t> &in)
 {
     JsUtil::ScopeGuard scopeGuard(env);

@@ -3168,6 +3168,26 @@ ErrCode InputMethodSystemAbility::GetInputMethodState(int32_t& status)
     status = static_cast<int32_t>(tmpStatus);
     return ErrorCode::NO_ERROR;
 }
+
+ErrCode InputMethodSystemAbility::GetCursorInfo(int32_t userId, CursorInfoInner &cursorInfo)
+{
+    if (!identityChecker_->IsSystemApp(IPCSkeleton::GetCallingFullTokenID())) {
+        IMSA_HILOGE("not system application!");
+        return ErrorCode::ERROR_STATUS_SYSTEM_PERMISSION;
+    }
+    int32_t outputUserId;
+    int32_t result = GetCallingUserId(outputUserId, userId);
+    if (result != ErrorCode::NO_ERROR) {
+        IMSA_HILOGE("GetCallingUserId failed, result:%{public}d", result);
+        return result;
+    }
+    auto session = UserSessionManager::GetInstance().GetUserSession(outputUserId);
+    if (session == nullptr) {
+        IMSA_HILOGE("%{public}d session is nullptr!", userId);
+        return ErrorCode::ERROR_IMSA_USER_SESSION_NOT_FOUND;
+    }
+    return session->GetCursorInfo(cursorInfo);
+}
 // LCOV_EXCL_STOP
 ErrCode InputMethodSystemAbility::ShowCurrentInput(uint64_t displayId, uint32_t type)
 {

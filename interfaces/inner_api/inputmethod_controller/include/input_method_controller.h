@@ -428,6 +428,18 @@ public:
     int32_t GetTextConfig(TextTotalConfig &config);
 
     /**
+     * @brief Get cursor info.
+     *
+     * This function is used to get cursor info of current client.
+     *
+     * @param cursorInfo Indicates the cursor info of current client that will be obtained.
+     * @param userId Indicates the user id.
+     * @return Returns 0 for success, others for failure.
+     * @since 12
+     */
+    IMF_API int32_t GetCursorInfo(CursorInfo &cursorInfo, int32_t userId = ImfCommonConst::DEFAULT_USER_ID);
+
+    /**
      * @brief Get current input method property.
      *
      * This function is used to get current input method property.
