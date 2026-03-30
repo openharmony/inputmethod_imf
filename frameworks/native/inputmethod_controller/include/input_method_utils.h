@@ -125,9 +125,11 @@ struct CursorInfo {
     double top = -1.0;
     double width = -1.0;
     double height = -1.0;
+    uint64_t displayId = 0;
     bool operator==(const CursorInfo &info) const
     {
-        return (left == info.left && top == info.top && width == info.width && height == info.height);
+        return (left == info.left && top == info.top && width == info.width && height == info.height &&
+            displayId == info.displayId);
     }
 };
 
@@ -136,9 +138,11 @@ struct CursorInfoInner : public Parcelable {
     double top = -1.0;
     double width = -1.0;
     double height = -1.0;
+    uint64_t displayId = 0;
     bool operator==(const CursorInfoInner &info) const
     {
-        return (left == info.left && top == info.top && width == info.width && height == info.height);
+        return (left == info.left && top == info.top && width == info.width && height == info.height &&
+            displayId == info.displayId);
     }
 
     bool ReadFromParcel(Parcel &in)
@@ -147,6 +151,7 @@ struct CursorInfoInner : public Parcelable {
         top = in.ReadDouble();
         width = in.ReadDouble();
         height = in.ReadDouble();
+        displayId = in.ReadUint64();
         return true;
     }
 
@@ -165,6 +170,10 @@ struct CursorInfoInner : public Parcelable {
         }
 
         if (!out.WriteDouble(height)) {
+            return false;
+        }
+
+        if (!out.WriteUint64(displayId)) {
             return false;
         }
         return true;
@@ -358,7 +367,8 @@ public:
         config.append(
             " newRange: " + std::to_string(textSelection.newBegin) + "/" + std::to_string(textSelection.newEnd));
         config.append(" cursor: " + std::to_string(cursorInfo.left) + "/" + std::to_string(cursorInfo.top) + "/" +
-            std::to_string(cursorInfo.width) + "/" + std::to_string(cursorInfo.height));
+            std::to_string(cursorInfo.width) + "/" + std::to_string(cursorInfo.height) + "/" +
+            std::to_string(cursorInfo.displayId));
         return config;
     }
 };

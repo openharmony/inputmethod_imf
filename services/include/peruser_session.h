@@ -190,6 +190,7 @@ public:
         pid_t clientPid);
     bool IsImeInUse();
     void SetSwitchInputType(bool isSwitchInputType);
+    int32_t GetCursorInfo(CursorInfoInner &cursorInfo);
 
 private:
     struct ResetManager {

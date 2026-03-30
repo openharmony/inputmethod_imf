@@ -1140,6 +1140,26 @@ int32_t InputMethodController::GetTextConfig(TextTotalConfig &config)
     return ErrorCode::NO_ERROR;
 }
 
+int32_t InputMethodController::GetCursorInfo(CursorInfo &cursorInfo, int32_t userId)
+{
+    IMSA_HILOGD("InputMethodController::GetCursorInfo start, userId: %{public}d.", userId);
+    auto proxy = GetSystemAbilityProxy();
+    if (proxy == nullptr) {
+        IMSA_HILOGE("proxy is nullptr!");
+        return ErrorCode::ERROR_SERVICE_START_FAILED;
+    }
+    CursorInfoInner cursorInfoInner;
+    int32_t ret = proxy->GetCursorInfo(userId, cursorInfoInner);
+    if (ret != ErrorCode::NO_ERROR) {
+        IMSA_HILOGE("GetCursorInfo failed: %{public}d", ret);
+        return ret;
+    }
+    cursorInfo = InputMethodTools::GetInstance().InnerToCursorInfo(cursorInfoInner);
+    IMSA_HILOGD("cursorInfo: left=%{public}f, top=%{public}f, width=%{public}f, height=%{public}f.",
+        cursorInfo.left, cursorInfo.top, cursorInfo.width, cursorInfo.height);
+    return ErrorCode::NO_ERROR;
+}
+
 int32_t InputMethodController::SetCallingWindow(uint32_t windowId)
 {
     if (!IsBound()) {

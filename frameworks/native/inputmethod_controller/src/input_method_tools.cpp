@@ -89,6 +89,7 @@ CursorInfoInner InputMethodTools::CursorInfoToInner(const CursorInfo &cursorInfo
     inner.top = cursorInfo.top;
     inner.width = cursorInfo.width;
     inner.height = cursorInfo.height;
+    inner.displayId = cursorInfo.displayId;
     return inner;
 }
 
@@ -99,8 +100,10 @@ CursorInfo InputMethodTools::InnerToCursorInfo(const CursorInfoInner &inner)
     cursorInfo.top = inner.top;
     cursorInfo.width = inner.width;
     cursorInfo.height = inner.height;
+    cursorInfo.displayId = inner.displayId;
     return cursorInfo;
 }
+
 // LCOV_EXCL_START
 RangeInner InputMethodTools::RangeToInner(const Range &range)
 {
