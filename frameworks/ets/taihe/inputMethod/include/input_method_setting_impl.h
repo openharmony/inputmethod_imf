@@ -28,11 +28,12 @@ namespace MiscServices {
 class InputMethodSettingImpl {
 public:
     static InputMethodSettingImpl &GetInstance();
-    taihe::array<InputMethodProperty_t> GetInputMethodsSync(bool enable);
+    taihe::array<InputMethodProperty_t> GetInputMethodsAsync(bool enable);
     taihe::array<InputMethodSubtype_t> ListCurrentInputMethodSubtypeSync();
     taihe::array<InputMethodSubtype_t> ListInputMethodSubtypeSync(InputMethodProperty_t const &inputMethodProperty);
     bool IsPanelShown(PanelInfo_t const &panelInfo);
-    taihe::array<InputMethodProperty_t> GetAllInputMethodsSync();
+    bool IsPanelShownId(PanelInfo_t const& panelInfo, int64_t displayId);
+    taihe::array<InputMethodProperty_t> GetAllInputMethodsAsync();
     void OnImeChangeCallback(const Property &property, const SubProperty &subProperty);
     void OnImeShowCallback(const ImeWindowInfo &info);
     void OnImeHideCallback(const ImeWindowInfo &info);
@@ -59,9 +60,9 @@ public:
     IMFSettingImpl()
     {
     }
-    taihe::array<InputMethodProperty_t> GetInputMethodsSync(bool enable)
+    taihe::array<InputMethodProperty_t> GetInputMethodsAsync(bool enable)
     {
-        return InputMethodSettingImpl::GetInstance().GetInputMethodsSync(enable);
+        return InputMethodSettingImpl::GetInstance().GetInputMethodsAsync(enable);
     }
     taihe::array<InputMethodSubtype_t> ListCurrentInputMethodSubtypeSync()
     {
@@ -75,34 +76,13 @@ public:
     {
         return InputMethodSettingImpl::GetInstance().IsPanelShown(panelInfo);
     }
-    taihe::array<InputMethodProperty_t> GetAllInputMethodsSync()
+    bool IsPanelShownId(PanelInfo_t const& panelInfo, int64_t displayId)
     {
-        return InputMethodSettingImpl::GetInstance().GetAllInputMethodsSync();
+        return InputMethodSettingImpl::GetInstance().IsPanelShownId(panelInfo, displayId);
     }
-    void OnImeHideImpl(taihe::callback_view<void(taihe::array_view<InputWindowInfo_t>)> f, uintptr_t opq)
+    taihe::array<InputMethodProperty_t> GetAllInputMethodsAsync()
     {
-        InputMethodSettingImpl::GetInstance().RegisterImeEvent("imeHide", EVENT_IME_HIDE_MASK, f, opq);
-    }
-    void OffImeHideImpl(taihe::optional_view<uintptr_t> opq)
-    {
-        InputMethodSettingImpl::GetInstance().UnregisterImeEvent("imeHide", EVENT_IME_HIDE_MASK, opq);
-    }
-    void OnImeShowImpl(taihe::callback_view<void(taihe::array_view<InputWindowInfo_t>)> f, uintptr_t opq)
-    {
-        InputMethodSettingImpl::GetInstance().RegisterImeEvent("imeShow", EVENT_IME_SHOW_MASK, f, opq);
-    }
-    void OffImeShowImpl(taihe::optional_view<uintptr_t> opq)
-    {
-        InputMethodSettingImpl::GetInstance().UnregisterImeEvent("imeShow", EVENT_IME_SHOW_MASK, opq);
-    }
-    void OnImeChangeImpl(taihe::callback_view<void(InputMethodProperty_t const &, InputMethodSubtype_t const &)> f,
-        uintptr_t opq)
-    {
-        InputMethodSettingImpl::GetInstance().RegisterImeEvent("imeChange", EVENT_IME_CHANGE_MASK, f, opq);
-    }
-    void OffImeChangeImpl(taihe::optional_view<uintptr_t> opq)
-    {
-        InputMethodSettingImpl::GetInstance().UnregisterImeEvent("imeChange", EVENT_IME_CHANGE_MASK, opq);
+        return InputMethodSettingImpl::GetInstance().GetAllInputMethodsAsync();
     }
 
     void OnImeHide(taihe::callback_view<void(taihe::array_view<InputWindowInfo_t>)> f, uintptr_t opq)
@@ -138,6 +118,14 @@ public:
         ::ohos::inputMethod::EnabledState enabledState)
     {
         InputMethodSettingImpl::GetInstance().EnableInputMethodSync(bundleName, extensionName, enabledState);
+    }
+    taihe::array<InputMethodProperty_t> GetInputMethodsSync(bool enable)
+    {
+        return InputMethodSettingImpl::GetInstance().GetInputMethodsAsync(enable);
+    }
+    taihe::array<InputMethodProperty_t> GetAllInputMethodsSync()
+    {
+        return InputMethodSettingImpl::GetInstance().GetAllInputMethodsAsync();
     }
 };
 } // namespace MiscServices

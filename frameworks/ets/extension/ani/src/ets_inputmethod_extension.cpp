@@ -386,11 +386,12 @@ ani_ref ETSInputMethodExtension::CallObjectMethod(bool withResult, const char *n
     va_list args;
     if (withResult) {
         va_start(args, signature);
-        if ((status = env->Object_CallMethod_Ref_V(etsAbilityObj_->aniObj, method, &res, args)) != ANI_OK) {
+        status = env->Object_CallMethod_Ref_V(etsAbilityObj_->aniObj, method, &res, args);
+        va_end(args);
+        if (status != ANI_OK) {
             IMSA_HILOGE("Object_CallMethod_Ref_V status : %{public}d", status);
             return nullptr;
         }
-        va_end(args);
         return res;
     }
     va_start(args, signature);
@@ -405,23 +406,13 @@ void ETSInputMethodExtension::ListenWindowManager()
 {
     IMSA_HILOGD("register window manager service listener.");
     auto etsInputMethodExtension = std::static_pointer_cast<ETSInputMethodExtension>(shared_from_this());
-    displayListener_ = sptr<EtsInputMethodExtensionDisplayListener>::MakeSptr(etsInputMethodExtension);
+    displayListener_ = sptr<EtsInputMethodExtensionDisplayAttributeListener>::MakeSptr(etsInputMethodExtension);
     if (displayListener_ == nullptr) {
-        IMSA_HILOGE("failed to create display listener!");
+        IMSA_HILOGD("failed to create display listener.");
         return;
     }
-
-    Rosen::DisplayManager::GetInstance().RegisterDisplayListener(displayListener_);
-}
-
-void ETSInputMethodExtension::OnListenerCreate(Rosen::DisplayId displayId)
-{
-    IMSA_HILOGD("enter");
-}
-
-void ETSInputMethodExtension::OnListenerDestroy(Rosen::DisplayId displayId)
-{
-    IMSA_HILOGD("exit");
+    std::vector<std::string> attributes = {"rotation", "width", "height"};
+    Rosen::DisplayManager::GetInstance().RegisterDisplayAttributeListener(attributes, displayListener_);
 }
 
 void ETSInputMethodExtension::ListenerCheckNeedAdjustKeyboard(Rosen::DisplayId displayId)

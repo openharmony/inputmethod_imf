@@ -245,7 +245,7 @@ napi_value JsTextInputClientEngine::GetResult(napi_env env, std::string &text)
     JsUtil::ScopeGuard scopeGuard(env);
     napi_value jsText = nullptr;
     napi_create_string_utf8(env, text.c_str(), NAPI_AUTO_LENGTH, &jsText);
-    return scopeGuard.Escape(jsText);
+    return jsText;
 }
 
 napi_status JsTextInputClientEngine::GetSelectRange(napi_env env, napi_value argv, std::shared_ptr<SelectContext> ctxt)
@@ -323,8 +323,9 @@ napi_value JsTextInputClientEngine::SendPrivateCommand(napi_env env, napi_callba
     auto input = [ctxt](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         PARAM_CHECK_RETURN(env, argc > 0, "at least one parameter is required!", TYPE_NONE, napi_generic_failure);
         napi_status status = JsUtils::GetValue(env, argv[0], ctxt->privateCommand);
-        CHECK_RETURN(status == napi_ok,
-            "commandData covert failed, type must be Record<string, CommandDataType>", status);
+        PARAM_CHECK_RETURN(env, status == napi_ok,
+            "commandData covert failed, type must be Record<string, CommandDataType>",
+            TYPE_NONE, napi_generic_failure);
         PARAM_CHECK_RETURN(env, TextConfig::IsPrivateCommandValid(ctxt->privateCommand),
             "commandData size limit 32KB, count limit 5.", TYPE_NONE, napi_generic_failure);
         ctxt->info = { std::chrono::system_clock::now(), ctxt->privateCommand };
@@ -1504,6 +1505,7 @@ int32_t JsTextInputClientEngine::JsMessageHandler::OnTerminated()
             IMSA_HILOGI("jsCallback is nullptr!.");
             return;
         }
+        JsUtil::ScopeGuard scopeGuard(jsCallback->env_);
         napi_get_reference_value(jsCallback->env_, jsCallback->onTerminatedCallback_, &callback);
         if (callback != nullptr) {
             napi_get_global(jsCallback->env_, &global);
@@ -1539,6 +1541,7 @@ int32_t JsTextInputClientEngine::JsMessageHandler::OnMessage(const ArrayBuffer &
             IMSA_HILOGI("jsCallbackObject is nullptr!.");
             return;
         }
+        JsUtil::ScopeGuard scopeGuard(jsCallbackObject->env_);
         napi_get_reference_value(jsCallbackObject->env_, jsCallbackObject->onMessageCallback_, &callback);
         if (callback != nullptr) {
             napi_get_global(jsCallbackObject->env_, &global);
