@@ -158,8 +158,7 @@
       ],
       "test": [
         "//base/inputmethod/imf/test/fuzztest:fuzztest",
-        "//base/inputmethod/imf/test/unittest:unittest",
-        "//base/inputmethod/imf/test/fuzztest/ontextchangedlistener_fuzzer:fuzztest"
+        "//base/inputmethod/imf/test/unittest:unittest"
       ]
     }
   }
