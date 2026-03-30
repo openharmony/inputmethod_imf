@@ -76,6 +76,7 @@ taihe_shared_library("inputmethod_taihe_native") {
     "src/ani_message_handler.cpp",
     "src/input_method_controller_impl.cpp",
     "src/input_method_event_listener.cpp",
+    "src/input_method_impl.cpp",
     "src/input_method_setting_impl.cpp",
     "src/input_method_text_changed_listener.cpp",
     "src/ohos.inputMethod.impl.cpp",
@@ -87,18 +88,11 @@ taihe_shared_library("inputmethod_taihe_native") {
     "${inputmethod_path}/interfaces/inner_api/inputmethod_controller:inputmethod_client",
   ]
   external_deps = [
-    "ability_base:want",
     "ability_runtime:abilitykit_native",
-    "ability_runtime:ani_base_context",
-    "ability_runtime:extensionkit_native",
+    "ace_engine:ace_uicontent",
+    "ability_runtime:napi_common",
     "bundle_framework:bms_ani_common",
-    "c_utils:utils",
-    "eventhandler:libeventhandler",
     "ffrt:libffrt",
-    "hilog:libhilog",
-    "icu:shared_icui18n",
-    "icu:shared_icuuc",
-    "ipc:ipc_core",
     "ipc:ipc_single",
   ]
 }

@@ -32,12 +32,15 @@ class InputMethodControllerImpl : public ControllerListener {
 public:
     static std::shared_ptr<InputMethodControllerImpl> GetInstance();
     void HideSoftKeyboardSync();
+    void HideSoftKeyboardIdSync(int64_t displayId);
     void ShowTextInputHasParam(RequestKeyboardReason_t requestKeyboardReason);
     void ShowTextInputSync();
     void HideTextInputSync();
     void AttachSync(bool showKeyboard, TextConfig_t const &textConfig);
     void AttachWithReason(bool showKeyboard, TextConfig_t const &textConfig,
         RequestKeyboardReason_t requestKeyboardReason);
+    void AttachWithUIContextSync(uintptr_t uiContext, TextConfig_t const& textConfig,
+        taihe::optional_view<AttachOptions_t> attachOptions);
     void DetachSync();
     void RegisterListener(std::string const &type, callbackType &&cb, uintptr_t opq);
     void UnRegisterListener(std::string const &type, taihe::optional_view<uintptr_t> opq);
@@ -61,6 +64,7 @@ public:
     void UpdateAttributeSync(InputAttribute_t const& attribute);
     bool StopInputSessionSync();
     void ShowSoftKeyboardSync();
+    void ShowSoftKeyboardIdSync(int64_t displayId);
     void SendMessageSync(::taihe::string_view msgId, ::taihe::optional_view<::taihe::array<uint8_t>> msgParam);
     void recvMessage(::taihe::optional_view<MessageHandler_t> msgHandler);
     void UpdateCursorSync(::ohos::inputMethod::CursorInfo const& cursorInfo);
@@ -84,6 +88,10 @@ public:
     {
         InputMethodControllerImpl::GetInstance()->HideSoftKeyboardSync();
     }
+    void HideSoftKeyboardIdSync(int64_t displayId)
+    {
+        InputMethodControllerImpl::GetInstance()->HideSoftKeyboardIdSync(displayId);
+    }
     void ShowTextInputHasParam(RequestKeyboardReason_t requestKeyboardReason)
     {
         InputMethodControllerImpl::GetInstance()->ShowTextInputHasParam(requestKeyboardReason);
@@ -105,105 +113,14 @@ public:
     {
         InputMethodControllerImpl::GetInstance()->AttachWithReason(showKeyboard, textConfig, requestKeyboardReason);
     }
+    void AttachWithUIContextSync(uintptr_t uiContext, TextConfig_t const& textConfig,
+        taihe::optional_view<AttachOptions_t> attachOptions)
+    {
+        InputMethodControllerImpl::GetInstance()->AttachWithUIContextSync(uiContext, textConfig, attachOptions);
+    }
     void DetachSync()
     {
         InputMethodControllerImpl::GetInstance()->DetachSync();
-    }
-    void OnSelectByRangeImpl(taihe::callback_view<void(Range_t const &)> f, uintptr_t opq)
-    {
-        InputMethodControllerImpl::GetInstance()->RegisterListener("selectByRange", f, opq);
-    }
-    void OffSelectByRangeImpl(taihe::optional_view<uintptr_t> opq)
-    {
-        InputMethodControllerImpl::GetInstance()->UnRegisterListener("selectByRange", opq);
-    }
-    void OnSelectByMovementImpl(taihe::callback_view<void(Movement_t const &)> f, uintptr_t opq)
-    {
-        InputMethodControllerImpl::GetInstance()->RegisterListener("selectByMovement", f, opq);
-    }
-    void OffSelectByMovementImpl(taihe::optional_view<uintptr_t> opq)
-    {
-        InputMethodControllerImpl::GetInstance()->UnRegisterListener("selectByMovement", opq);
-    }
-    void OnInsertTextImpl(taihe::callback_view<void(taihe::string_view)> f, uintptr_t opq)
-    {
-        InputMethodControllerImpl::GetInstance()->RegisterListener("insertText", f, opq);
-    }
-    void OffInsertTextImpl(taihe::optional_view<uintptr_t> opq)
-    {
-        InputMethodControllerImpl::GetInstance()->UnRegisterListener("insertText", opq);
-    }
-    void OnDeleteLeftImpl(taihe::callback_view<void(int32_t)> f, uintptr_t opq)
-    {
-        InputMethodControllerImpl::GetInstance()->RegisterListener("deleteLeft", f, opq);
-    }
-    void OffDeleteLeftImpl(taihe::optional_view<uintptr_t> opq)
-    {
-        InputMethodControllerImpl::GetInstance()->UnRegisterListener("deleteLeft", opq);
-    }
-    void OnDeleteRightImpl(taihe::callback_view<void(int32_t)> f, uintptr_t opq)
-    {
-        InputMethodControllerImpl::GetInstance()->RegisterListener("deleteRight", f, opq);
-    }
-    void OffDeleteRightImpl(taihe::optional_view<uintptr_t> opq)
-    {
-        InputMethodControllerImpl::GetInstance()->UnRegisterListener("deleteRight", opq);
-    }
-    void OnSendKeyboardStatusImpl(taihe::callback_view<void(KeyboardStatus_t)> f, uintptr_t opq)
-    {
-        InputMethodControllerImpl::GetInstance()->RegisterListener("sendKeyboardStatus", f, opq);
-    }
-    void OffSendKeyboardStatusImpl(taihe::optional_view<uintptr_t> opq)
-    {
-        InputMethodControllerImpl::GetInstance()->UnRegisterListener("sendKeyboardStatus", opq);
-    }
-    void OnSendFunctionKeyImpl(taihe::callback_view<void(FunctionKey_t const &)> f, uintptr_t opq)
-    {
-        InputMethodControllerImpl::GetInstance()->RegisterListener("sendFunctionKey", f, opq);
-    }
-    void OffSendFunctionKeyImpl(taihe::optional_view<uintptr_t> opq)
-    {
-        InputMethodControllerImpl::GetInstance()->UnRegisterListener("sendFunctionKey", opq);
-    }
-    void OnMoveCursorImpl(taihe::callback_view<void(Direction_t)> f, uintptr_t opq)
-    {
-        InputMethodControllerImpl::GetInstance()->RegisterListener("moveCursor", f, opq);
-    }
-    void OffMoveCursorImpl(taihe::optional_view<uintptr_t> opq)
-    {
-        InputMethodControllerImpl::GetInstance()->UnRegisterListener("moveCursor", opq);
-    }
-    void OnHandleExtendActionImpl(taihe::callback_view<void(ExtendAction_t)> f, uintptr_t opq)
-    {
-        InputMethodControllerImpl::GetInstance()->RegisterListener("handleExtendAction", f, opq);
-    }
-    void OffHandleExtendActionImpl(taihe::optional_view<uintptr_t> opq)
-    {
-        InputMethodControllerImpl::GetInstance()->UnRegisterListener("handleExtendAction", opq);
-    }
-    void OnGetLeftTextOfCursorImpl(taihe::callback_view<taihe::string(int32_t)> f, uintptr_t opq)
-    {
-        InputMethodControllerImpl::GetInstance()->RegisterListener("getLeftTextOfCursor", f, opq);
-    }
-    void OffGetLeftTextOfCursorImpl(taihe::optional_view<uintptr_t> opq)
-    {
-        InputMethodControllerImpl::GetInstance()->UnRegisterListener("getLeftTextOfCursor", opq);
-    }
-    void OnGetRightTextOfCursorImpl(taihe::callback_view<taihe::string(int32_t)> f, uintptr_t opq)
-    {
-        InputMethodControllerImpl::GetInstance()->RegisterListener("getRightTextOfCursor", f, opq);
-    }
-    void OffGetRightTextOfCursorImpl(taihe::optional_view<uintptr_t> opq)
-    {
-        InputMethodControllerImpl::GetInstance()->UnRegisterListener("getRightTextOfCursor", opq);
-    }
-    void OnGetTextIndexAtCursorImpl(taihe::callback_view<int32_t()> f, uintptr_t opq)
-    {
-        InputMethodControllerImpl::GetInstance()->RegisterListener("getTextIndexAtCursor", f, opq);
-    }
-    void OffGetTextIndexAtCursorImpl(taihe::optional_view<uintptr_t> opq)
-    {
-        InputMethodControllerImpl::GetInstance()->UnRegisterListener("getTextIndexAtCursor", opq);
     }
     void OnSetPreviewText(
         taihe::callback_view<void(::taihe::string_view text, ::ohos::inputMethod::Range const& range)> f,
@@ -346,6 +263,10 @@ public:
     void ShowSoftKeyboardSync()
     {
         InputMethodControllerImpl::GetInstance()->ShowSoftKeyboardSync();
+    }
+    void ShowSoftKeyboardIdSync(int64_t displayId)
+    {
+        InputMethodControllerImpl::GetInstance()->ShowSoftKeyboardIdSync(displayId);
     }
     void SendMessageSync(::taihe::string_view msgId, ::taihe::optional_view<::taihe::array<uint8_t>> msgParam)
     {
