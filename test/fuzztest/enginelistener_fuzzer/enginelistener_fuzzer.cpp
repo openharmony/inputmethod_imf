@@ -93,7 +93,7 @@ public:
         inputFinished_ = true;
     }
 
-    bool IsEnable() override
+    bool IsEnable(uint64_t displayId) override
     {
         return isEnabled_;
     }
@@ -188,8 +188,9 @@ void FuzzIsEnable(FuzzedDataProvider &provider)
 {
     auto listener = std::make_shared<FuzzInputMethodEngineListener>();
     bool fuzzedEnabled = provider.ConsumeBool();
+    uint64_t fuzzedDisplayId = provider.ConsumeIntegral<uint64_t>();
     listener->SetIsEnabled(fuzzedEnabled);
-    bool result = listener->IsEnable();
+    bool result = listener->IsEnable(fuzzedDisplayId);
     (void)result;
 }
 
