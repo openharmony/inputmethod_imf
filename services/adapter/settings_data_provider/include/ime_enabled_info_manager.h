@@ -141,7 +141,9 @@ public:
     bool IsDefaultFullMode(int32_t userId, const std::string &bundleName);
     int32_t SetCurrentIme(int32_t userId, const std::string &imeId, const std::string &subName, bool isSetByUser);
     int32_t SetTmpIme(int32_t userId, const std::string &imeId);
-    std::shared_ptr<ImeNativeCfg> GetCurrentImeCfg(int32_t userId); // Return value is never nullptr.
+    std::shared_ptr<ImeNativeCfg> GetCurrentImeCfgInner(int32_t userId, bool &isCurrentImeSet);
+    std::shared_ptr<ImeNativeCfg> GetCurrentImeCfg(int32_t userId);
+    std::shared_ptr<ImeNativeCfg> GetCurrentImeCfgWithCorrect(int32_t userId);
     ImeNativeCfg GetUserCfgIme(int32_t userId);
     bool IsDefaultImeSet(int32_t userId);
     /* add for compatibility that sys ime mod full experience table in it's full experience switch changed */

@@ -70,7 +70,9 @@ struct CallbackObject {
     {
         taihe::env_guard guard;
         if (auto *env = guard.get_env()) {
-            env->GlobalReference_Delete(ref);
+            if (env->GlobalReference_Delete(ref) != ANI_OK) {
+                IMSA_HILOGE("Failed to delete global reference.");
+            }
         }
     }
     callbackType callback;
@@ -101,7 +103,9 @@ public:
     ~GlobalRefGuard()
     {
         if (env_ && ref_) {
-            env_->GlobalReference_Delete(ref_);
+            if (env_->GlobalReference_Delete(ref_) != ANI_OK) {
+                IMSA_HILOGE("Failed to delete global reference.");
+            }
         }
     }
 
@@ -219,7 +223,7 @@ public:
             IMSA_HILOGE("null env");
             return aniObject;
         }
-        ani_status retCode = env->FindClass("escompat.Uint8Array", &arrayClass);
+        ani_status retCode = env->FindClass("std.core.Uint8Array", &arrayClass);
         if (retCode != ANI_OK) {
             IMSA_HILOGE("Failed: env->FindClass()");
             return aniObject;
@@ -237,7 +241,10 @@ public:
             return aniObject;
         }
         ani_ref buffer;
-        env->Object_GetFieldByName_Ref(aniObject, "buffer", &buffer);
+        ani_status status;
+        if ((status = env->Object_GetFieldByName_Ref(aniObject, "buffer", &buffer)) != ANI_OK) {
+            IMSA_HILOGE("Failed to get value, status: %{public}d", status);
+        }
         void *bufData;
         size_t bufLength;
         retCode = env->ArrayBuffer_GetInfo(static_cast<ani_arraybuffer>(buffer), &bufData, &bufLength);

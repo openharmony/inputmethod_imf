@@ -130,7 +130,7 @@ HWTEST_F(ImeSystemChannelTest, testImeSystemChannel_nullptr, TestSize.Level1)
     privateCommand.emplace("value1", privateDataValue1);
     imeSystemChannel_->systemCmdListener_ = nullptr;
     imeSystemChannel_->OnConnectCmdReady(nullptr);
-    imeSystemChannel_->GetSmartMenuCfg();
+    imeSystemChannel_->GetSmartMenuConfig();
     int32_t ret = imeSystemChannel_->ReceivePrivateCommand(privateCommand);
     EXPECT_EQ(ret, ErrorCode::ERROR_EX_NULL_POINTER);
     ret = imeSystemChannel_->NotifyPanelStatus({ InputType::NONE, 0, 0, 0 });

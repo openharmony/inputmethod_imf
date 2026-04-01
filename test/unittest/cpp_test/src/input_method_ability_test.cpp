@@ -2481,14 +2481,9 @@ HWTEST_F(InputMethodAbilityTest, testHidePanel, TestSize.Level0)
 {
     IMSA_HILOGI("InputMethodAbility testHidePanel START");
     imc_->Attach(textListener_);
-    PanelInfo info1;
-    info1.panelType = SOFT_KEYBOARD;
-    info1.panelFlag = FLG_FLOATING;
     AccessScope scope(currentImeTokenId_, currentImeUid_);
     auto panel = std::make_shared<InputMethodPanel>();
-    auto ret = inputMethodAbility_.CreatePanel(nullptr, info1, panel);
-    ASSERT_EQ(ret, ErrorCode::NO_ERROR);
-    ret = InputMethodAbilityTest::inputMethodAbility_.HidePanel(nullptr);
+    auto ret = InputMethodAbilityTest::inputMethodAbility_.HidePanel(nullptr);
     EXPECT_EQ(ret, ErrorCode::ERROR_BAD_PARAMETERS);
 
     InputMethodAbilityTest::inputMethodAbility_.isImeTerminating_ = true;

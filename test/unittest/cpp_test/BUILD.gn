@@ -61,6 +61,8 @@ ohos_unittest("InputMethodControllerTest") {
     "${inputmethod_path}/interfaces/inner_api/inputmethod_controller:input_client_stub",
     "${inputmethod_path}/interfaces/inner_api/inputmethod_controller:input_method_agent_proxy",
     "${inputmethod_path}/interfaces/inner_api/inputmethod_controller:inputmethod_client_static",
+    "${inputmethod_path}/services/adapter/settings_data_provider:settings_data_static",
+    "${inputmethod_path}/services/json:imf_json_static",
     "${inputmethod_path}/services:inputmethod_service_static",
     "${inputmethod_path}/test/common:inputmethod_test_common",
     "${inputmethod_path}/test/unittest/cpp_test/common:inputmethod_tdd_util",
@@ -68,6 +70,7 @@ ohos_unittest("InputMethodControllerTest") {
   ]
 
   external_deps = [
+    "window_manager:libwm",
     "ability_base:want",
     "ability_runtime:ability_context_native",
     "ability_runtime:ability_manager",
@@ -131,6 +134,7 @@ ohos_unittest("InputMethodAttachTest") {
     "${inputmethod_path}/interfaces/inner_api/inputmethod_controller:input_client_stub",
     "${inputmethod_path}/interfaces/inner_api/inputmethod_controller:input_method_agent_proxy",
     "${inputmethod_path}/interfaces/inner_api/inputmethod_controller:inputmethod_client_static",
+    "${inputmethod_path}/services/adapter/settings_data_provider:settings_data_static",
     "${inputmethod_path}/services:inputmethod_service_static",
     "${inputmethod_path}/services/json:imf_json_static",
     "${inputmethod_path}/test/common:inputmethod_test_common",
@@ -200,6 +204,7 @@ ohos_unittest("InputMethodAbilityTest") {
     "${inputmethod_path}/interfaces/inner_api/inputmethod_controller:input_method_agent_proxy",
     "${inputmethod_path}/interfaces/inner_api/inputmethod_controller:input_method_agent_stub",
     "${inputmethod_path}/interfaces/inner_api/inputmethod_controller:inputmethod_client_static",
+    "${inputmethod_path}/services/adapter/settings_data_provider:settings_data_static",
     "${inputmethod_path}/services:inputmethod_service_static",
     "${inputmethod_path}/services/json:imf_json_static",
     "${inputmethod_path}/test/common:inputmethod_test_common",
@@ -208,6 +213,7 @@ ohos_unittest("InputMethodAbilityTest") {
   ]
 
   external_deps = [
+    "window_manager:libwm",
     "ability_base:want",
     "ability_runtime:ability_context_native",
     "ability_runtime:ability_manager",
@@ -256,6 +262,7 @@ ohos_unittest("InputMethodServiceTest") {
   deps = [
     "${inputmethod_path}/interfaces/inner_api/inputmethod_ability:inputmethod_ability",
     "${inputmethod_path}/interfaces/inner_api/inputmethod_controller:inputmethod_client_static",
+    "${inputmethod_path}/services/adapter/settings_data_provider:settings_data_static",
     "${inputmethod_path}/services:inputmethod_service_static",
     "${inputmethod_path}/test/common:inputmethod_test_common",
     "${inputmethod_path}/test/unittest/cpp_test/common:inputmethod_tdd_util",
@@ -316,6 +323,7 @@ ohos_unittest("InputMethodDfxTest") {
     "${inputmethod_path}/interfaces/inner_api/inputmethod_controller:input_client_stub",
     "${inputmethod_path}/interfaces/inner_api/inputmethod_controller:input_method_agent_proxy",
     "${inputmethod_path}/interfaces/inner_api/inputmethod_controller:inputmethod_client_static",
+    "${inputmethod_path}/services/adapter/settings_data_provider:settings_data_static",
     "${inputmethod_path}/services:inputmethod_service_static",
     "${inputmethod_path}/test/common:inputmethod_test_common",
     "${inputmethod_path}/test/unittest/cpp_test/common:inputmethod_tdd_util",
@@ -324,6 +332,7 @@ ohos_unittest("InputMethodDfxTest") {
   ]
 
   external_deps = [
+    "window_manager:libwm",
     "ability_base:want",
     "ability_runtime:ability_context_native",
     "ability_runtime:ability_manager",
@@ -382,6 +391,7 @@ ohos_unittest("InputMethodPanelTest") {
     "${inputmethod_path}/interfaces/inner_api/inputmethod_ability:input_method_core_stub",
     "${inputmethod_path}/interfaces/inner_api/inputmethod_ability:inputmethod_ability_static",
     "${inputmethod_path}/interfaces/inner_api/inputmethod_controller:inputmethod_client_static",
+    "${inputmethod_path}/services/adapter/settings_data_provider:settings_data_static",
     "${inputmethod_path}/services:inputmethod_service_static",
     "${inputmethod_path}/test/common:inputmethod_test_common",
     "${inputmethod_path}/test/unittest/cpp_test/common:inputmethod_tdd_util",
@@ -390,6 +400,7 @@ ohos_unittest("InputMethodPanelTest") {
   ]
 
   external_deps = [
+    "window_manager:libwm",
     "ability_base:want",
     "ability_runtime:ability_context_native",
     "ability_runtime:ability_manager",
@@ -450,12 +461,14 @@ ohos_unittest("InputMethodPanelAdjustTest") {
     "${inputmethod_path}/interfaces/inner_api/inputmethod_ability:inputmethod_ability_static",
     "${inputmethod_path}/interfaces/inner_api/inputmethod_controller:input_method_agent_proxy",
     "${inputmethod_path}/interfaces/inner_api/inputmethod_controller:inputmethod_client_static",
+    "${inputmethod_path}/services/adapter/settings_data_provider:settings_data_static",
     "${inputmethod_path}/services:inputmethod_service_static",
     "${inputmethod_path}/test/common:inputmethod_test_common",
     "${inputmethod_path}/test/unittest/cpp_test/common:inputmethod_tdd_util",
   ]
 
   external_deps = [
+    "window_manager:libwm",
     "ability_base:want",
     "ability_runtime:ability_context_native",
     "ability_runtime:ability_manager",
@@ -584,6 +597,7 @@ ohos_unittest("InputMethodPrivateMemberTest") {
     "${inputmethod_path}/interfaces/inner_api/inputmethod_controller:input_method_agent_proxy",
     "${inputmethod_path}/interfaces/inner_api/inputmethod_controller:input_method_agent_stub",
     "${inputmethod_path}/interfaces/inner_api/inputmethod_controller:inputmethod_client_static",
+    "${inputmethod_path}/services/adapter/settings_data_provider:settings_data_static",
     "${inputmethod_path}/services:inputmethod_service_static",
     "${inputmethod_path}/test/common:inputmethod_test_common",
     "${inputmethod_path}/test/unittest/cpp_test/common:inputmethod_tdd_util",
@@ -647,6 +661,7 @@ ohos_unittest("InputMethodEditorTest") {
     "${inputmethod_path}/interfaces/inner_api/inputmethod_controller:input_client_stub",
     "${inputmethod_path}/interfaces/inner_api/inputmethod_controller:input_method_agent_proxy",
     "${inputmethod_path}/interfaces/inner_api/inputmethod_controller:inputmethod_client_static",
+    "${inputmethod_path}/services/adapter/settings_data_provider:settings_data_static",
     "${inputmethod_path}/services:inputmethod_service_static",
     "${inputmethod_path}/services/json:imf_json_static",
     "${inputmethod_path}/test/common:inputmethod_test_common",
@@ -729,6 +744,7 @@ ohos_unittest("NewImeSwitchTest") {
     "input:libmmi-client",
     "ipc:ipc_single",
     "safwk:system_ability_fwk",
+    "window_manager:libwm",
   ]
 
   if (window_manager_use_sceneboard) {
@@ -768,6 +784,7 @@ ohos_unittest("NumKeyAppsManagerTest") {
     "ability_base:want",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
+    "cJSON:cjson",
     "c_utils:utils",
     "config_policy:configpolicy_util",
     "data_share:datashare_common",
@@ -803,6 +820,8 @@ ohos_unittest("IdentityCheckerTest") {
   configs = [ ":module_private_config" ]
 
   deps = [
+    "${inputmethod_path}/common:inputmethod_common",
+    "${inputmethod_path}/services/adapter/settings_data_provider:settings_data_static",
     "${inputmethod_path}/services:inputmethod_service_static",
     "${inputmethod_path}/test/common:inputmethod_test_common",
     "${inputmethod_path}/test/unittest/cpp_test/common:inputmethod_tdd_util",
@@ -979,11 +998,13 @@ ohos_unittest("ImeProxyAgentImeTest") {
   ]
 
   external_deps = [
+    "window_manager:libwm",
     "ability_base:want",
     "ability_runtime:ability_context_native",
     "ability_runtime:ability_manager",
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_core",
+    "cJSON:cjson",
     "c_utils:utils",
     "config_policy:configpolicy_util",
     "googletest:gtest_main",
@@ -1047,6 +1068,7 @@ ohos_unittest("ImeProxyTest") {
   ]
 
   external_deps = [
+    "window_manager:libwm",
     "ability_base:want",
     "ability_runtime:ability_context_native",
     "ability_runtime:ability_manager",
@@ -1132,6 +1154,8 @@ ohos_unittest("ImeFreezeManagerTest") {
   configs = [ ":module_private_config" ]
 
   deps = [
+    "${inputmethod_path}/common:inputmethod_common",
+    "${inputmethod_path}/services/adapter/settings_data_provider:settings_data_static",
     "${inputmethod_path}/services:inputmethod_service_static",
     "${inputmethod_path}/test/unittest/cpp_test/common:inputmethod_tdd_util",
   ]
@@ -1336,6 +1360,7 @@ ohos_unittest("ImeControllerCpaiTest") {
   ]
 
   external_deps = [
+    "ability_base:want",
     "ace_engine:ace_ndk",
     "ace_engine:ace_uicontent",
     "googletest:gtest_main",
@@ -1416,12 +1441,15 @@ ohos_unittest("InputMethodMessageHandlerTest") {
     "${inputmethod_path}/interfaces/inner_api/inputmethod_ability:inputmethod_ability_static",
     "${inputmethod_path}/interfaces/inner_api/inputmethod_controller:input_method_agent_proxy",
     "${inputmethod_path}/interfaces/inner_api/inputmethod_controller:inputmethod_client_static",
+    "${inputmethod_path}/services/adapter/settings_data_provider:settings_data_static",
+    "${inputmethod_path}/services/json:imf_json_static",
     "${inputmethod_path}/services:inputmethod_service_static",
     "${inputmethod_path}/test/common:inputmethod_test_common",
     "${inputmethod_path}/test/unittest/cpp_test/common:inputmethod_tdd_util",
   ]
 
   external_deps = [
+    "window_manager:libwm",
     "ability_base:want",
     "ability_runtime:ability_context_native",
     "ability_runtime:ability_manager",
@@ -1474,6 +1502,7 @@ ohos_unittest("OnDemandStartStopSaTest") {
   ]
 
   external_deps = [
+    "cJSON:cjson",
     "c_utils:utils",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -1545,6 +1574,8 @@ ohos_unittest("ImfHisysEventReporterTest") {
   ]
 
   external_deps = [
+    "ability_base:want",
+    "cJSON:cjson",
     "c_utils:utils",
     "googletest:gtest_main",
     "hilog:libhilog",
@@ -1638,6 +1669,7 @@ ohos_unittest("ImaTextEditTest") {
   ]
 
   external_deps = [
+    "window_manager:libwm",
     "ability_base:want",
     "ability_runtime:ability_context_native",
     "ability_runtime:ability_manager",
@@ -1762,6 +1794,7 @@ ohos_unittest("ImeEnabledInfoManagerTest") {
     "ability_base:want",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
+    "cJSON:cjson",
     "c_utils:utils",
     "config_policy:configpolicy_util",
     "data_share:datashare_common",
@@ -1824,11 +1857,13 @@ ohos_unittest("ImeMirrorTest") {
   ]
 
   external_deps = [
+    "window_manager:libwm",
     "ability_base:want",
     "ability_runtime:ability_context_native",
     "ability_runtime:ability_manager",
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_core",
+    "cJSON:cjson",
     "c_utils:utils",
     "config_policy:configpolicy_util",
     "googletest:gtest_main",
@@ -1878,6 +1913,7 @@ ohos_executable("ImeMirrorDemo") {
   configs = [ ":module_private_config" ]
 
   external_deps = [
+    "cJSON:cjson",
     "c_utils:utils",
     "config_policy:configpolicy_util",
     "hilog:libhilog",
@@ -2085,6 +2121,7 @@ ohos_unittest("ImeEventListenerManagerTest") {
   ]
 
   external_deps = [
+    "ability_base:want",
     "c_utils:utils",
     "googletest:gtest_main",
     "hilog:libhilog",

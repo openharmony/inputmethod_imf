@@ -641,7 +641,7 @@ HWTEST_F(InputMethodPrivateMemberTest, III_TestGetCurrentSubtype_001, TestSize.L
     cfg.enabledInfos.push_back(imeInfo);
     ImeEnabledInfoManager::GetInstance().imeEnabledCfg_.insert({ currentUserId, cfg });
     auto subProp = ImeInfoInquirer::GetInstance().GetCurrentSubtype(currentUserId);
-    EXPECT_TRUE(subProp == nullptr);
+    EXPECT_FALSE(subProp == nullptr);
 
     // subName is not find
     auto currentProp = InputMethodController::GetInstance()->GetCurrentInputMethod();
@@ -691,7 +691,7 @@ HWTEST_F(InputMethodPrivateMemberTest, III_TestGetCurrentIme_001, TestSize.Level
     cfg.enabledInfos.push_back(imeInfo);
     ImeEnabledInfoManager::GetInstance().imeEnabledCfg_.insert({ currentUserId, cfg });
     auto prop = ImeInfoInquirer::GetInstance().GetCurrentInputMethod(currentUserId);
-    EXPECT_TRUE(prop == nullptr);
+    EXPECT_FALSE(prop == nullptr);
 
     // get correct prop
     auto currentProp = InputMethodController::GetInstance()->GetCurrentInputMethod();
@@ -1532,14 +1532,14 @@ HWTEST_F(InputMethodPrivateMemberTest, SA_TestPerUserSessionOnScreenUnlocked, Te
     auto userSession = std::make_shared<PerUserSession>(MAIN_USER_ID);
     userSession->realImeData_ = nullptr;
     userSession->OnScreenUnlock();
-
-    userSession->InitRealImeData({ "", "" });
+    sptr<AAFwk::IAbilityConnection> connection = nullptr;
+    userSession->InitRealImeData(connection, { "", "" });
     userSession->OnScreenUnlock();
 
     auto imeCfg = ImeEnabledInfoManager::GetInstance().GetCurrentImeCfg(MAIN_USER_ID);
     EXPECT_NE(imeCfg, nullptr);
     userSession->realImeData_ = nullptr;
-    userSession->InitRealImeData({ imeCfg->bundleName, imeCfg->extName });
+    userSession->InitRealImeData(connection, { imeCfg->bundleName, imeCfg->extName });
     userSession->OnScreenUnlock();
 }
 
@@ -2448,17 +2448,21 @@ HWTEST_F(InputMethodPrivateMemberTest, SA_RestoreCurrentImeSubType, TestSize.Lev
 HWTEST_F(InputMethodPrivateMemberTest, SA_TestSysParamChanged_001, TestSize.Level0)
 {
     IMSA_HILOGI("InputMethodPrivateMemberTest::SA_TestSysParamChanged_001 start.");
+    InputMethodSystemAbility sysAbility;
     auto ret = SystemParamAdapter::GetInstance().WatchParam("abnormal");
     EXPECT_EQ(ret, ErrorCode::ERROR_BAD_PARAMETERS);
     SystemParamAdapter::HandleSysParamChanged("key", "value", "key", 0);
     SystemParamAdapter::HandleSysParamChanged("key", "value", "abnormalKey", 0);
-    InputMethodSystemAbility sysAbility;
     UserSessionManager::GetInstance().userSessions_.clear();
     sysAbility.OnSysMemChanged();
     auto userSession = std::make_shared<PerUserSession>(MAIN_USER_ID);
     UserSessionManager::GetInstance().userSessions_.insert_or_assign(MAIN_USER_ID, userSession);
     sysAbility.OnSysMemChanged();
     ret = SystemParamAdapter::GetInstance().WatchParam(SystemParamAdapter::MEMORY_WATERMARK_KEY);
+    ImeInfoInquirer::GetInstance().productConfig_.disabledMemoryWatermark = true;
+    sysAbility.HandleMemStarted();
+    ImeInfoInquirer::GetInstance().productConfig_.disabledMemoryWatermark = false;
+    sysAbility.HandleMemStarted();
     EXPECT_EQ(ret, ErrorCode::NO_ERROR);
 }
 
@@ -3075,8 +3079,17 @@ HWTEST_F(InputMethodPrivateMemberTest, PerUserSession_OnImeDied, TestSize.Level0
     pid_t pid = 10;
     auto userSession = std::make_shared<PerUserSession>(MAIN_USER_ID);
     // imeData is nullptr
+    auto currentIme = ImeCfgManager::GetInstance().GetCurrentImeCfg(MAIN_USER_ID);
+    ASSERT_NE(currentIme, nullptr);
+    auto temp = ImeInfoInquirer::GetInstance().systemConfig_.defaultInputMethod;
+    ImeInfoInquirer::GetInstance().systemConfig_.defaultInputMethod =
+        currentIme->bundleName + "/" + currentIme->extName;
     userSession->realImeData_ = nullptr;
+    ImeInfoInquirer::GetInstance().productConfig_.disabledMemoryWatermark = true;
     userSession->OnImeDied(core, ImeType::IME, pid);
+    ImeInfoInquirer::GetInstance().productConfig_.disabledMemoryWatermark = false;
+    userSession->OnImeDied(core, ImeType::IME, pid);
+    ImeInfoInquirer::GetInstance().systemConfig_.defaultInputMethod = temp;
     // imeData not nullptr
     auto imeData = std::make_shared<ImeData>(nullptr, nullptr, nullptr, pid);
     userSession->realImeData_ = imeData;
