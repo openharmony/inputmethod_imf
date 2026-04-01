@@ -60,6 +60,7 @@ ohos_shared_library("ohinputmethod") {
     "hilog:libhilog",
     "input:libmmi-client",
     "ipc:ipc_single",
+    "samgr:samgr_proxy",
   ]
 
   innerapi_tags = [ "ndk" ]
@@ -113,6 +114,7 @@ ohos_static_library("ohinputmethod_static") {
     "eventhandler:libeventhandler",
     "input:libmmi-client",
     "ipc:ipc_single",
+    "samgr:samgr_proxy",
   ]
 
   subsystem_name = "inputmethod"
