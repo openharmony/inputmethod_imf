@@ -1643,14 +1643,16 @@ HWTEST_F(InputMethodAbilityTest, testConnectSystemCmd_001, TestSize.Level0)
     TextListener::ResetParam();
     IdentityCheckerMock::SetBundleNameValid(true);
     IdentityCheckerMock::SetPermission(true);
+    IdentityCheckerMock::SetSystemApp(true);
     InputMethodAbilityTest::GetIMCAttachIMA();
     auto systemCmdChannelServiceImpl = new (std::nothrow) SystemCmdChannelServiceImpl();
     sptr<IRemoteObject> agent;
     auto ret = InputMethodAbilityTest::imsa_->ConnectSystemCmd(systemCmdChannelServiceImpl->AsObject(), agent);
-    EXPECT_EQ(ret, ErrorCode::NO_ERROR);
+    EXPECT_EQ(ret, ErrorCode::ERROR_SYSTEM_PANEL_ERROR);
     InputMethodAbilityTest::GetIMCDetachIMA();
     IdentityCheckerMock::SetBundleNameValid(false);
     IdentityCheckerMock::SetPermission(false);
+    IdentityCheckerMock::SetSystemApp(false);
 }
 
 /**

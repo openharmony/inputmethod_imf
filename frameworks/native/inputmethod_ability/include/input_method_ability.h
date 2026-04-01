@@ -243,7 +243,7 @@ private:
 
     std::mutex systemAppCheckMutex_;
     bool isSystemApp_ = false;
-    
+
     std::mutex bindClientInfoLock_;
     HiSysEventClientInfo bindClientInfo_;
     bool isInputStartNotified_ = false;
