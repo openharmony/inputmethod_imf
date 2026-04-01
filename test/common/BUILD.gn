@@ -55,6 +55,7 @@ ohos_static_library("inputmethod_test_common") {
     "hilog:libhilog",
     "input:libmmi-client",
     "ipc:ipc_single",
+    "samgr:samgr_proxy",
   ]
 
   subsystem_name = "inputmethod"
@@ -81,6 +82,7 @@ ohos_static_library("inputmethod_fuzztest_common") {
     "hilog:libhilog",
     "input:libmmi-client",
     "ipc:ipc_single",
+    "samgr:samgr_proxy",
   ]
 
   subsystem_name = "inputmethod"

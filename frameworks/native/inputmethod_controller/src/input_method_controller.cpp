@@ -42,6 +42,7 @@
 #include "sys/prctl.h"
 #include "system_ability_definition.h"
 #include "system_cmd_channel_stub.h"
+#include "system_ability_status_change_stub.h"
 
 namespace OHOS {
 namespace MiscServices {
@@ -72,6 +73,20 @@ static constexpr int32_t MAX_TIMEOUT = 2500;
 constexpr int64_t DISPATCH_KEYBOARD_TIME_OUT = 5; // 5ms
 constexpr size_t MAX_AGENT_NUMBER = 2;
 const std::string IME_MIRROR_NAME = "proxyIme_IME_MIRROR";
+class SaMgrListener : public SystemAbilityStatusChangeStub {
+public:
+    explicit SaMgrListener(std::function<void()> handler) : func_(handler) {};
+    ~SaMgrListener() override = default;
+    void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
+    void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override {}
+
+private:
+    std::function<void()> func_;
+};
+
+std::mutex listenerMapMutex_;
+sptr<ISystemAbilityStatusChange> saMgrListener_;
+
 InputMethodController::InputMethodController()
 {
     IMSA_HILOGD("IMC structure.");
@@ -149,6 +164,11 @@ int32_t InputMethodController::Initialize()
         IMSA_HILOGE("failed to new channel!");
         return ErrorCode::ERROR_NULL_POINTER;
     }
+
+    SubscribeSaStart([this]() {
+        this->RestoreListenInfoInSaDied();
+        }, INPUT_METHOD_SYSTEM_ABILITY_ID);
+
     InputAttribute attribute;
     attribute.inputPattern = InputAttribute::PATTERN_TEXT;
     clientInfo_.attribute = attribute;
@@ -809,7 +829,6 @@ void InputMethodController::RestoreListenInfoInSaDied()
 
 void InputMethodController::RestoreClientInfoInSaDied()
 {
-    RestoreListenInfoInSaDied();
     if (!IsEditable()) {
         IMSA_HILOGD("not editable.");
         return;
@@ -2568,6 +2587,58 @@ void OnTextChangedListener::OnDetachV2()
         listener->OnDetach();
     };
     eventHandler->PostTask(task, "OnDetachV2", 0, AppExecFwk::EventQueue::Priority::VIP);
+}
+
+bool InputMethodController::SubscribeSaStart(std::function<void()> handler, int32_t saId)
+{
+    if (handler == nullptr) {
+        IMSA_HILOGE("handler is nullptr");
+        return false;
+    }
+    {
+        std::lock_guard<std::mutex> lockGuard(listenerMapMutex_);
+        if (saMgrListener_ != nullptr) {
+            IMSA_HILOGW("saId:%{public}d is already registered", saId);
+            return true;
+        }
+    }
+
+    auto abilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (abilityManager == nullptr) {
+        IMSA_HILOGE("abilityManager is nullptr, saId: %{public}d", saId);
+        return false;
+    }
+    sptr<ISystemAbilityStatusChange> listener = new (std::nothrow) SaMgrListener([handler]() {
+        if (handler != nullptr) {
+            handler();
+        }
+    });
+    if (listener == nullptr) {
+        IMSA_HILOGE("failed to create listener, saId: %{public}d", saId);
+        return false;
+    }
+    int32_t ret = abilityManager->SubscribeSystemAbility(saId, listener);
+    if (ret != ErrorCode::NO_ERROR) {
+        IMSA_HILOGE("subscribe system ability failed, ret: %{public}d, saId: %{public}d", ret, saId);
+        return false;
+    }
+    {
+        std::lock_guard<std::mutex> lockGuard(listenerMapMutex_);
+        saMgrListener_ = listener;
+    }
+    IMSA_HILOGD("subscribe system ability success, saId: %{public}d", saId);
+    return true;
+}
+
+void SaMgrListener::OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId)
+{
+    IMSA_HILOGD("systemAbilityId: %{public}d.", systemAbilityId);
+    if (systemAbilityId != INPUT_METHOD_SYSTEM_ABILITY_ID) {
+        return;
+    }
+    if (func_ != nullptr) {
+        func_();
+    }
 }
 // LCOV_EXCL_STOP
 } // namespace MiscServices
