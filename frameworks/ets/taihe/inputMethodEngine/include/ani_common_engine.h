@@ -117,7 +117,9 @@ struct CallbackObjects {
     {
         taihe::env_guard guard;
         if (auto *env = guard.get_env()) {
-            env->GlobalReference_Delete(ref);
+            if (env->GlobalReference_Delete(ref) != ANI_OK) {
+                IMSA_HILOGE("Failed to delete global reference.");
+            }
         }
     }
     callbackTypes callback;
@@ -148,7 +150,9 @@ public:
     ~GlobalRefGuards()
     {
         if (env_ && ref_) {
-            env_->GlobalReference_Delete(ref_);
+            if (env_->GlobalReference_Delete(ref_) != ANI_OK) {
+                IMSA_HILOGE("Failed to delete global reference.");
+            }
         }
     }
 
@@ -189,7 +193,7 @@ public:
     static bool ParseRects(ani_object aniRects, std::vector<Rosen::Rect> &rects, int32_t maxNum);
     static bool ParseWindowRect(ani_env *env, const char* propertyName, ani_object obj, Rosen::Rect &result);
     static bool ParsePanelRect(ani_env* env, PanelRect_t const& rect, LayoutParams& param);
-    static bool ParseEnhancedPanelRect(ani_env* env, EnhancedPanelRect_t const& rect,
+    static int32_t ParseEnhancedPanelRect(ani_env* env, EnhancedPanelRect_t const& rect,
         EnhancedLayoutParams& param, HotAreas& hotAreas);
     static ani_enum_item CreateAniWindowStatus(ani_env* env, Rosen::WindowStatus type);
     static ani_object CreateAniRect(ani_env* env, Rosen::Rect rect);

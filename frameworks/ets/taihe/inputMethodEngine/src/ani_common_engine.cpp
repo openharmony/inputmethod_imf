@@ -296,7 +296,7 @@ ani_object CommonConvert::Uint8ArrayToObject(ani_env *env, const std::vector<uin
         IMSA_HILOGE("null env");
         return aniObject;
     }
-    ani_status retCode = env->FindClass("escompat.Uint8Array", &arrayClass);
+    ani_status retCode = env->FindClass("std.core.Uint8Array", &arrayClass);
     if (retCode != ANI_OK) {
         IMSA_HILOGE("Failed: env->FindClass()");
         return aniObject;
@@ -341,7 +341,9 @@ ani_object CommonConvert::CreateAniUndefined(ani_env* env)
         IMSA_HILOGE("null env");
         return nullptr;
     }
-    env->GetUndefined(&aniRef);
+    if (env->GetUndefined(&aniRef) != ANI_OK) {
+        IMSA_HILOGE("GetUndefined failed");
+    }
     return static_cast<ani_object>(aniRef);
 }
 
@@ -381,7 +383,7 @@ ani_object CommonConvert::CreateAniSize(ani_env* env, uint32_t width, uint32_t h
         return CommonConvert::CreateAniUndefined(env);
     }
     ani_method aniCtor;
-    ret = env->Class_FindMethod(aniClass, "<ctor>", nullptr, &aniCtor);
+    ret = env->Class_FindMethod(aniClass, "<ctor>", ":", &aniCtor);
     if (ret != ANI_OK) {
         IMSA_HILOGE("[ANI] ctor not found");
         return CommonConvert::CreateAniUndefined(env);
@@ -392,8 +394,14 @@ ani_object CommonConvert::CreateAniSize(ani_env* env, uint32_t width, uint32_t h
         IMSA_HILOGE("[ANI] fail to new obj");
         return CommonConvert::CreateAniUndefined(env);
     }
-    CallAniMethodVoid(env, aniRect, aniClass, "<set>width", nullptr, ani_int(width));
-    CallAniMethodVoid(env, aniRect, aniClass, "<set>height", nullptr, ani_int(height));
+    ret = CallAniMethodVoid(env, aniRect, aniClass, "<set>width", nullptr, ani_int(width));
+    if (ret == ANI_OK) {
+        ret = CallAniMethodVoid(env, aniRect, aniClass, "<set>height", nullptr, ani_int(height));
+    }
+    if (ret != ANI_OK) {
+        IMSA_HILOGE("[ANI] width or height not found");
+        return CommonConvert::CreateAniUndefined(env);
+    }
     return aniRect;
 }
 
@@ -644,8 +652,7 @@ bool CommonConvert::GetRectOrUndefined(ani_env* env, ani_object param, const cha
         IMSA_HILOGD("%{public}s : undefined", name);
         return false;
     }
-    ani_object obj = static_cast<ani_object>(ref);
-    if (!ParseWindowRect(env, name, obj, rect)) {
+    if (!ParseWindowRect(env, name, param, rect)) {
         IMSA_HILOGD("Parse %{public}s failed", name);
         return false;
     }
@@ -671,8 +678,8 @@ bool CommonConvert::GetRegionOrUndefined(ani_env* env, ani_object param, const c
         return false;
     }
     if (isUndefined) {
-        IMSA_HILOGD("%{public}s : undefined", name);
-        return false;
+        IMSA_HILOGD("%{public}s : optional param undefined", name);
+        return true;
     }
     ani_object obj = static_cast<ani_object>(ref);
     if (!ParseRects(obj, rect, MAX_INPUT_REGION_LEN)) {
@@ -683,19 +690,19 @@ bool CommonConvert::GetRegionOrUndefined(ani_env* env, ani_object param, const c
     return true;
 }
 
-bool CommonConvert::ParseEnhancedPanelRect(ani_env* env, EnhancedPanelRect_t const& rect,
+int32_t CommonConvert::ParseEnhancedPanelRect(ani_env* env, EnhancedPanelRect_t const& rect,
     EnhancedLayoutParams& param, HotAreas& hotAreas)
 {
     if (env == nullptr) {
         IMSA_HILOGE("env is nullptr");
-        return false;
+        return ErrorCode::ERROR_NULL_POINTER;
     }
     ani_object obj = ::taihe::into_ani<EnhancedPanelRect_t>(env, rect);
     ani_boolean isUndefined;
     ani_status ret = env->Reference_IsUndefined(obj, &isUndefined);
     if (ret != ANI_OK || isUndefined) {
         IMSA_HILOGE("EnhancedPanelRect isUndefined failed or undefined ret: %{public}d", ret);
-        return false;
+        return ErrorCode::ERROR_PARAMETER_CHECK_FAILED;
     }
 
     // Get the isFullScreen
@@ -730,20 +737,18 @@ bool CommonConvert::ParseEnhancedPanelRect(ani_env* env, EnhancedPanelRect_t con
     }
     // has landscapeInputRegion -> Get the hotAreas
     std::vector<Rosen::Rect> landRects;
-    if (GetRegionOrUndefined(env, obj, "landscapeInputRegion", landRects)) {
-        hotAreas.landscape.keyboardHotArea = landRects;
-    } else {
-        hotAreas.landscape.keyboardHotArea.clear();
+    if (!GetRegionOrUndefined(env, obj, "landscapeInputRegion", landRects)) {
+        return ErrorCode::ERROR_PARAMETER_CHECK_FAILED;
     }
+    hotAreas.landscape.keyboardHotArea = landRects;
 
     // has portraitInputRegion -> Get the hotAreas
     std::vector<Rosen::Rect> portRects;
-    if (GetRegionOrUndefined(env, obj, "portraitInputRegion", portRects)) {
-        hotAreas.portrait.keyboardHotArea = portRects;
-    } else {
-        hotAreas.portrait.keyboardHotArea.clear();
+    if (!GetRegionOrUndefined(env, obj, "portraitInputRegion", portRects)) {
+        return ErrorCode::ERROR_PARAMETER_CHECK_FAILED;
     }
-    return true;
+    hotAreas.portrait.keyboardHotArea = portRects;
+    return ErrorCode::NO_ERROR;
 }
 
 ani_enum_item CommonConvert::CreateAniWindowStatus(ani_env* env, Rosen::WindowStatus status)
@@ -796,10 +801,21 @@ ani_object CommonConvert::CreateAniRect(ani_env* env, Rosen::Rect rect)
         IMSA_HILOGE("[ANI] fail to create new obj");
         return CreateAniUndefined(env);
     }
-    CallAniMethodVoid(env, aniRect, aniClass, "<set>left", nullptr, ani_int(rect.posX_));
-    CallAniMethodVoid(env, aniRect, aniClass, "<set>top", nullptr, ani_int(rect.posY_));
-    CallAniMethodVoid(env, aniRect, aniClass, "<set>width", nullptr, ani_int(rect.width_));
-    CallAniMethodVoid(env, aniRect, aniClass, "<set>height", nullptr, ani_int(rect.height_));
+
+    ret = CallAniMethodVoid(env, aniRect, aniClass, "<set>left", nullptr, ani_int(rect.posX_));
+    if (ret == ANI_OK) {
+        ret = CallAniMethodVoid(env, aniRect, aniClass, "<set>top", nullptr, ani_int(rect.posY_));
+    }
+    if (ret == ANI_OK) {
+        ret = CallAniMethodVoid(env, aniRect, aniClass, "<set>width", nullptr, ani_int(rect.width_));
+    }
+    if (ret == ANI_OK) {
+        ret = CallAniMethodVoid(env, aniRect, aniClass, "<set>height", nullptr, ani_int(rect.height_));
+    }
+    if (ret != ANI_OK) {
+        IMSA_HILOGE("[ANI] fail to CallAniMethodVoid");
+        return CreateAniUndefined(env);
+    }
     return aniRect;
 }
 

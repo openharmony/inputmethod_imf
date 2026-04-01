@@ -35,6 +35,7 @@ ohos_executable("ime") {
   deps = [ "${inputmethod_path}/interfaces/inner_api/inputmethod_controller:inputmethod_client" ]
 
   external_deps = [
+    "ability_base:want",
     "c_utils:utils",
     "hilog:libhilog",
     "input:libmmi-client",

@@ -390,6 +390,7 @@ int32_t InputMethodSystemAbility::Init()
     IMSA_HILOGI("publish start");
 #ifdef IMF_ON_DEMAND_START_STOP_SA_ENABLE
     ImeInfoInquirer::GetInstance().InitSystemConfig();
+    ImeInfoInquirer::GetInstance().InitProductConfig();
     bool isSuccess = Publish(this);
     if (!isSuccess) {
         IMSA_HILOGE("publish failed");
@@ -406,6 +407,7 @@ int32_t InputMethodSystemAbility::Init()
     IMSA_HILOGI("publish success");
     state_ = ServiceRunningState::STATE_RUNNING;
     ImeInfoInquirer::GetInstance().InitSystemConfig();
+    ImeInfoInquirer::GetInstance().InitProductConfig();
     ImeInfoInquirer::GetInstance().InitDynamicStartImeCfg();
     ImeStateManagerFactory::GetInstance().SetDynamicStartIme(ImeInfoInquirer::GetInstance().IsDynamicStartIme());
 #endif
@@ -2662,7 +2664,10 @@ int32_t InputMethodSystemAbility::CheckSwitchPermission(int32_t userId, const Sw
         }
         IMSA_HILOGE("have not PERMISSION_CONNECT_IME_ABILITY!");
         auto currentImeCfg = ImeEnabledInfoManager::GetInstance().GetCurrentImeCfg(userId);
-        auto currentBundleName = currentImeCfg == nullptr ? "" : currentImeCfg->bundleName;
+        std::string currentBundleName;
+        if (currentImeCfg != nullptr) {
+            currentBundleName = currentImeCfg->bundleName;
+        }
         if (identityChecker_->IsBundleNameValid(IPCSkeleton::GetCallingTokenID(), currentBundleName) ||
             IsTmpIme(userId, tokenId)) {
             IMSA_HILOGD("current ime!");
@@ -2845,7 +2850,9 @@ void InputMethodSystemAbility::HandleMemStarted()
     IMSA_HILOGI("MemMgr start.");
     Memory::MemMgrClient::GetInstance().NotifyProcessStatus(getpid(), 1, 1, INPUT_METHOD_SYSTEM_ABILITY_ID);
     Memory::MemMgrClient::GetInstance().SetCritical(getpid(), true, INPUT_METHOD_SYSTEM_ABILITY_ID);
-    SystemParamAdapter::GetInstance().WatchParam(SystemParamAdapter::MEMORY_WATERMARK_KEY);
+    if (ImeInfoInquirer::GetInstance().IsMemoryWatermarkEnabled()) {
+        SystemParamAdapter::GetInstance().WatchParam(SystemParamAdapter::MEMORY_WATERMARK_KEY);
+    }
     ResetAllImes();
 }
 

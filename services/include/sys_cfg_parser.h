@@ -191,9 +191,27 @@ struct IgnoreSysPanelAdjustCfg : public Serializable {
     }
 };
 
+struct ProductConfig : public Serializable {
+    bool disabledMemoryWatermark = false;
+    bool Unmarshal(cJSON *node) override
+    {
+        GetValue(node, GET_NAME(disabledMemoryWatermark), disabledMemoryWatermark);
+        return true;
+    }
+};
+
+struct ImeProductConfig : public Serializable {
+    ProductConfig productConfig;
+    bool Unmarshal(cJSON *node) override
+    {
+        return GetValue(node, GET_NAME(productConfig), productConfig);
+    }
+};
+
 class SysCfgParser {
 public:
     static bool ParseSystemConfig(SystemConfig &systemConfig);
+    static bool ParseProductConfig(ProductConfig &productConfig);
     static bool ParseInputType(std::vector<InputTypeInfo> &inputType);
     static bool ParsePanelAdjust(std::vector<SysPanelAdjust> &sysPanelAdjust);
     static bool ParseDefaultFullIme(std::vector<DefaultFullImeInfo> &defaultFullImeList);
