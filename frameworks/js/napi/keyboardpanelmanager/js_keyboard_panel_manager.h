@@ -64,19 +64,20 @@ public:
     static napi_value Init(napi_env env, napi_value info);
     static sptr<JsKeyboardPanelManager> GetInstance();
     static napi_value SendPrivateCommand(napi_env env, napi_callback_info info);
-    static napi_value ConnectSystemCmd(napi_env env, napi_callback_info info);
-    static napi_value Subscribe(napi_env env, napi_callback_info info);
-    static napi_value UnSubscribe(napi_env env, napi_callback_info info);
-    static napi_value GetDefaultInputMethod(napi_env env, napi_callback_info info);
-    static napi_value GetJsInputMethodProperty(napi_env env, const Property &property);
+    static napi_value ConnectSystemChannel(napi_env env, napi_callback_info info);
+    static napi_value OnSystemPrivateCommand(napi_env env, napi_callback_info info);
+    static napi_value OffSystemPrivateCommand(napi_env env, napi_callback_info info);
+    static napi_value OnSystemPanelStatusChange(napi_env env, napi_callback_info info);
+    static napi_value OffSystemPanelStatusChange(napi_env env, napi_callback_info info);
 
     void ReceivePrivateCommand(const std::unordered_map<std::string, PrivateDataValue> &privateCommand) override;
     void NotifyPanelStatus(const SysPanelStatus &sysPanelStatus) override;
 
 private:
     void RegisterListener(napi_value callback, std::string type, std::shared_ptr<JSCallbackObject> callbackObj);
-    void UnRegisterListener(napi_value callback, std::string type);
+    void UnRegisterListener(napi_value callback, std::string type, napi_env env);
     napi_value GetJsPanelStatus(napi_env env, const SysPanelStatus &in);
+    static napi_value GetJsInputMethodInputType(napi_env env);
     struct UvEntry {
         std::vector<std::shared_ptr<JSCallbackObject>> vecCopy;
         std::string type;
