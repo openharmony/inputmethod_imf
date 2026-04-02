@@ -74,7 +74,6 @@ struct ImeData {
     std::pair<std::string, std::string> ime; // first: bundleName  second:extName
     int64_t startTime{ 0 };
     bool isStartedInScreenLocked = false;
-    sptr<AAFwk::IAbilityConnection> connection{ nullptr };
     ImeData(sptr<IInputMethodCore> core, sptr<IRemoteObject> agent, sptr<InputDeathRecipient> deathRecipient,
             pid_t imePid)
         : core(std::move(core)), agent(std::move(agent)), deathRecipient(std::move(deathRecipient)), pid(imePid)
@@ -233,7 +232,7 @@ private:
     std::shared_ptr<ClientGroup> GetClientGroup(uint64_t displayId);
     std::shared_ptr<ClientGroup> GetClientGroup(sptr<IRemoteObject> client);
     std::shared_ptr<ClientGroup> GetClientGroupByGroupId(uint64_t displayGroupId);
-    int32_t InitRealImeData(sptr<AAFwk::IAbilityConnection> &connection,
+    int32_t InitRealImeData(
         const std::pair<std::string, std::string> &ime, const std::shared_ptr<ImeNativeCfg> &imeNativeCfg = nullptr);
     std::shared_ptr<ImeData> UpdateRealImeData(sptr<IInputMethodCore> core, sptr<IRemoteObject> agent, pid_t pid,
         pid_t uid);
@@ -313,6 +312,9 @@ private:
     void ResetRestartTasks();
     int32_t SendAllReadyImeToClient(
         std::shared_ptr<ImeData> data, const std::shared_ptr<InputClientInfo> &clientInfo);
+    void SetImeConnection(const sptr<AAFwk::IAbilityConnection> &connection);
+    sptr<AAFwk::IAbilityConnection> GetImeConnection();
+    void ClearImeConnection(const sptr<AAFwk::IAbilityConnection> &connection);
     int32_t IsRequestOverLimit(TimeLimitType timeLimit, int32_t resetTimeOut, uint32_t restartNum);
     int32_t PrepareImeInfos(const std::shared_ptr<ImeData> &imeData, std::vector<sptr<IRemoteObject>> &agents,
         std::vector<BindImeInfo> &imeInfos, uint64_t groupId);
@@ -382,6 +384,8 @@ private:
     uint32_t attachingCount_ { 0 };
     std::mutex scbStartCountMtx_{};
     uint32_t scbStartCount_ { 0 };
+    std::mutex connectionLock_{};
+    sptr<AAFwk::IAbilityConnection> connection_ = nullptr;
     std::atomic<bool> isBlockStartedByLowMem_ = false;
     bool isFirstPreemption_ = false;
     std::mutex proxyImeDataLock_;
