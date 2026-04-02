@@ -1532,14 +1532,13 @@ HWTEST_F(InputMethodPrivateMemberTest, SA_TestPerUserSessionOnScreenUnlocked, Te
     auto userSession = std::make_shared<PerUserSession>(MAIN_USER_ID);
     userSession->realImeData_ = nullptr;
     userSession->OnScreenUnlock();
-    sptr<AAFwk::IAbilityConnection> connection = nullptr;
-    userSession->InitRealImeData(connection, { "", "" });
+    userSession->InitRealImeData({ "", "" });
     userSession->OnScreenUnlock();
 
     auto imeCfg = ImeEnabledInfoManager::GetInstance().GetCurrentImeCfg(MAIN_USER_ID);
     EXPECT_NE(imeCfg, nullptr);
     userSession->realImeData_ = nullptr;
-    userSession->InitRealImeData(connection, { imeCfg->bundleName, imeCfg->extName });
+    userSession->InitRealImeData({ imeCfg->bundleName, imeCfg->extName });
     userSession->OnScreenUnlock();
 }
 
@@ -4488,7 +4487,7 @@ HWTEST_F(InputMethodPrivateMemberTest, PerUserSession_NotifyImeChangedToClients_
     ImeEnabledInfoManager::GetInstance().imeEnabledCfg_.insert_or_assign(MAIN_USER_ID, cfg);
     auto userSession = std::make_shared<PerUserSession>(MAIN_USER_ID);
     auto ret = userSession->NotifyImeChangedToClients();
-    EXPECT_EQ(ret, ErrorCode::ERROR_IME_NOT_STARTED);
+    EXPECT_EQ(ret, ErrorCode::ERROR_IMSA_GET_IME_INFO_FAILED);
 }
 
 /**

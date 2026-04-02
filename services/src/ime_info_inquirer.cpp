@@ -319,7 +319,7 @@ int32_t ImeInfoInquirer::ListAllInputMethod(const int32_t userId, std::vector<Pr
 int32_t ImeInfoInquirer::ListInputMethod(const int32_t userId, std::vector<Property> &props)
 {
     IMSA_HILOGD("userId: %{public}d.", userId);
-    auto ret = FullImeInfoManager::GetInstance().GetWithoutSystemSpecialIme(userId, props);
+    auto ret = FullImeInfoManager::GetInstance().Get(userId, props, false);
     if (!props.empty()) {
         return ret;
     }
@@ -782,7 +782,6 @@ bool ImeInfoInquirer::IsImeInstalled(const int32_t userId, const std::string &bu
 std::shared_ptr<ImeNativeCfg> ImeInfoInquirer::GetImeToStart(int32_t userId)
 {
     auto currentImeCfg = ImeEnabledInfoManager::GetInstance().GetCurrentImeCfg(userId);
-    IMSA_HILOGD("userId: %{public}d, currentIme: %{public}s.", userId, currentImeCfg->imeId.c_str());
     if (currentImeCfg == nullptr || currentImeCfg->imeId.empty() ||
         !IsImeInstalled(userId, currentImeCfg->bundleName, currentImeCfg->extName)) {
         auto newIme = GetDefaultIme();
@@ -790,6 +789,7 @@ std::shared_ptr<ImeNativeCfg> ImeInfoInquirer::GetImeToStart(int32_t userId)
         ImeEnabledInfoManager::GetInstance().SetCurrentIme(userId, newIme.imeId, "", false);
         return std::make_shared<ImeNativeCfg>(newIme);
     }
+    IMSA_HILOGD("userId: %{public}d, currentIme: %{public}s.", userId, currentImeCfg->imeId.c_str());
     return currentImeCfg;
 }
 
