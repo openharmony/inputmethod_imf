@@ -1103,6 +1103,7 @@ private:
     void ReportClientShow(int32_t eventCode, int32_t errCode, ClientType type);
     void GetWindowScaleCoordinate(uint32_t windowId, CursorInfo &cursorInfo);
     void CalibrateImmersiveParam(InputAttribute &inputAttribute);
+    void CalibrateInputPatternParam(InputAttribute &inputAttribute);
     void ClearAgentInfo();
     int32_t SendRequestToAllAgents(std::function<int32_t(std::shared_ptr<IInputMethodAgent>)> task);
     int32_t SendRequestToImeMirrorAgent(std::function<int32_t(std::shared_ptr<IInputMethodAgent>)> task);
