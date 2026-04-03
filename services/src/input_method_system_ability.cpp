@@ -2067,7 +2067,6 @@ int32_t InputMethodSystemAbility::OnUserRemoved(const Message *msg)
     }
     FullImeInfoManager::GetInstance().Delete(userId);
     NumkeyAppsManager::GetInstance().OnUserRemoved(userId);
-    RemoveWindowMonitors(userId);
     return ErrorCode::NO_ERROR;
 }
 
