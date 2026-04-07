@@ -40,6 +40,7 @@ group("fuzztest") {
     "inputmethodcontrollertwo_fuzzer:fuzztest",
     "inputmethodsystemability_fuzzer:fuzztest",
     "keyeventconsumer_fuzzer:fuzztest",
+    "ontextchangedlistener_fuzzer:fuzztest",
     "perusersession_fuzzer:fuzztest",
     "panelstatusinfo_fuzzer:fuzztest",
     "parcelutils_fuzzer:fuzztest",
