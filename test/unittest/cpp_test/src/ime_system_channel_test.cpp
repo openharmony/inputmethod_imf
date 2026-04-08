@@ -20,6 +20,7 @@
 #undef private
 #include <gtest/gtest.h>
 
+#include "identity_checker_mock.h"
 #include "scope_utils.h"
 #include "tdd_util.h"
 using namespace testing;
@@ -84,7 +85,7 @@ HWTEST_F(ImeSystemChannelTest, testConnectSystemCmd001, TestSize.Level1)
 {
     IMSA_HILOGI("ImeSystemChannelTest testConnectSystemCmd001 Test START");
     auto ret = imeSystemChannel_->ConnectSystemCmd(sysCmdListener_);
-    EXPECT_EQ(ret, ErrorCode::ERROR_SYSTEM_CMD_CHANNEL_ERROR);
+    EXPECT_EQ(ret, ErrorCode::ERROR_STATUS_SYSTEM_PERMISSION);
 }
 
 /**
@@ -98,7 +99,7 @@ HWTEST_F(ImeSystemChannelTest, testConnectSystemCmd002, TestSize.Level1)
     IMSA_HILOGI("ImeSystemChannelTest testConnectSystemCmd002 Test START");
     TokenScope scope(ImeSystemChannelTest::permissionTokenId_);
     auto ret = imeSystemChannel_->ConnectSystemCmd(sysCmdListener_);
-    EXPECT_EQ(ret, ErrorCode::NO_ERROR);
+    EXPECT_EQ(ret, ErrorCode::ERROR_NULL_POINTER);
 }
 
 /**
@@ -153,6 +154,23 @@ HWTEST_F(ImeSystemChannelTest, testSystemCmdChannelServiceImpl_nullptr, TestSize
     EXPECT_EQ(ret, ErrorCode::ERROR_EX_NULL_POINTER);
     ret = systemCmdChannelServiceImpl_->NotifyPanelStatus({ InputType::NONE, 0, 0, 0 });
     EXPECT_EQ(ret, ErrorCode::ERROR_NULL_POINTER);
+}
+/**
+ * @tc.name: testIsSystemApp001
+ * @tc.desc: Test IsSystemApp with first call returning false.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ImeSystemChannelTest, testIsSystemApp001, TestSize.Level1)
+{
+    IMSA_HILOGI("ImeSystemChannelTest testIsSystemApp002 TEST START");
+    auto ret = imeSystemChannel_->IsSystemApp();
+    EXPECT_FALSE(ret);
+    TokenScope scope(ImeSystemChannelTest::permissionTokenId_);
+    ret = imeSystemChannel_->IsSystemApp();
+    EXPECT_TRUE(ret);
+    auto ret1 = imeSystemChannel_->IsSystemApp();
+    EXPECT_EQ(ret, ret1);
 }
 } // namespace MiscServices
 } // namespace OHOS

@@ -99,6 +99,7 @@ const std::map<int32_t, int32_t> JsUtils::ERROR_CODE_MAP = {
     { ErrorCode::ERROR_USER_NOT_EXIST, EXCEPTION_USER_NOT_EXIST },
     { ErrorCode::ERROR_USER_NOT_IN_FOREGROUND, EXCEPTION_USER_NOT_IN_FOREGROUND },
     { ErrorCode::ERROR_CROSS_USER_OPERATION_DENIED, EXCEPTION_CROSS_USER_OPERATION_DENIED },
+    { ErrorCode::ERROR_SYSTEM_PANEL_ERROR, EXCEPTION_SYSTEM_PANEL_ERROR },
 };
 
 const std::map<int32_t, std::string> JsUtils::ERROR_CODE_CONVERT_MESSAGE_MAP = {
@@ -140,6 +141,10 @@ const std::map<int32_t, std::string> JsUtils::ERROR_CODE_CONVERT_MESSAGE_MAP = {
     { EXCEPTION_USER_NOT_IN_FOREGROUND, "the specified user is not in the foreground." },
     { EXCEPTION_CROSS_USER_OPERATION_DENIED, "cross-user operation denied. Only user 0 applications are authorized "
                                              "for this operation" },
+    { EXCEPTION_SYSTEM_PANEL_ERROR, "input method system panel error. Possible causes:"
+        "1. the system panel not connected."
+        "2. ipc failed due to the large amount of data transferred or other reasons."
+        "3. the caller is not system panel." }
 };
 
 const std::map<int32_t, std::string> JsUtils::PARAMETER_TYPE = {
