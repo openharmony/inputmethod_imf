@@ -198,23 +198,25 @@ InputMethod_ErrorCode OH_InputMethodController_AttachWithUIContext(ArkUI_Context
     attachOptions.requestKeyboardReason =
         static_cast<RequestKeyboardReason>(static_cast<int32_t>(options->requestKeyboardReason));
     int32_t err = controller->Attach(listener, attachOptions, textConfig, ClientType::CAPI);
-    if (err == ErrorCode::NO_ERROR) {
-        errCode = IME_ERR_OK;
-        std::lock_guard<std::mutex> guard(g_textEditorProxyMapMutex);
-        if (g_inputMethodProxy != nullptr) {
-            g_inputMethodProxy->attached = true;
-        }
-        *inputMethodProxy = g_inputMethodProxy;
-    } else {
-        errCode = ErrorCodeConvert(err);
+    if (err != ErrorCode::NO_ERROR) {
+        return ErrorCodeConvert(err);
     }
-
-    return errCode;
+    {
+        std::lock_guard<std::mutex> guard(g_textEditorProxyMapMutex);
+        if (g_inputMethodProxy == nullptr || g_inputMethodProxy->textEditor != textEditorProxy) {
+            IMSA_HILOGE("Attach failed, g_inputMethodProxy has been updated by other thread");
+            return IME_ERR_IMCLIENT;
+        }
+        g_inputMethodProxy->attached = true;
+        *inputMethodProxy = g_inputMethodProxy;
+    }
+    return IME_ERR_OK;
 }
 
 InputMethod_ErrorCode OH_InputMethodController_Attach(InputMethod_TextEditorProxy *textEditor,
     InputMethod_AttachOptions *options, InputMethod_InputMethodProxy **inputMethodProxy)
 {
+    IMSA_HILOGD("start");
     if ((IsValidTextEditorProxy(textEditor) != IME_ERR_OK) || options == nullptr || inputMethodProxy == nullptr) {
         IMSA_HILOGE("invalid parameter");
         return IME_ERR_NULL_POINTER;
@@ -247,18 +249,19 @@ InputMethod_ErrorCode OH_InputMethodController_Attach(InputMethod_TextEditorProx
     attachOptions.requestKeyboardReason =
         static_cast<RequestKeyboardReason>(static_cast<int32_t>(options->requestKeyboardReason));
     int32_t err = controller->Attach(listener, attachOptions, textConfig, ClientType::CAPI);
-    if (err == ErrorCode::NO_ERROR) {
-        errCode = IME_ERR_OK;
-        std::lock_guard<std::mutex> guard(g_textEditorProxyMapMutex);
-        if (g_inputMethodProxy != nullptr) {
-            g_inputMethodProxy->attached = true;
-        }
-        *inputMethodProxy = g_inputMethodProxy;
-    } else {
-        errCode = ErrorCodeConvert(err);
+    if (err != ErrorCode::NO_ERROR) {
+        return ErrorCodeConvert(err);
     }
-
-    return errCode;
+    {
+        std::lock_guard<std::mutex> guard(g_textEditorProxyMapMutex);
+        if (g_inputMethodProxy == nullptr || g_inputMethodProxy->textEditor != textEditor) {
+            IMSA_HILOGE("Attach failed, g_inputMethodProxy has been updated by other thread");
+            return IME_ERR_IMCLIENT;
+        }
+        g_inputMethodProxy->attached = true;
+        *inputMethodProxy = g_inputMethodProxy;
+    }
+    return IME_ERR_OK;
 }
 
 void ClearInputMethodProxy(void)
