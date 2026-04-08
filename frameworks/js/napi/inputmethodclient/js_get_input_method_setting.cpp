@@ -17,6 +17,7 @@
 
 #include "event_checker.h"
 #include "ime_event_monitor_manager_impl.h"
+#include "ime_system_channel.h"
 #include "input_client_info.h"
 #include "input_method_controller.h"
 #include "input_method_status.h"
@@ -76,6 +77,7 @@ napi_value JsGetInputMethodSetting::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("off", UnSubscribe),
         DECLARE_NAPI_FUNCTION("onImeChangeWithUserId", SubscribeImechange),
         DECLARE_NAPI_FUNCTION("offImeChangeWithUserId", UnSubscribeImechange),
+        DECLARE_NAPI_FUNCTION("getDefaultInputMethodAbility", GetDefaultInputMethodAbility),
     };
     napi_value cons = nullptr;
     IMF_CALL(napi_define_class(env, IMS_CLASS_NAME.c_str(), IMS_CLASS_NAME.size(), JsConstructor, nullptr,
@@ -1086,6 +1088,25 @@ napi_value JsGetInputMethodSetting::GetCursorInfo(napi_env env, napi_callback_in
         return JsUtil::Const::Null(env);
     }
     return JsUtils::GetValue(env, cursorInfo);
+}
+
+napi_value JsGetInputMethodSetting::GetDefaultInputMethodAbility(napi_env env, napi_callback_info info)
+{
+    std::shared_ptr<Property> property;
+    auto channel = ImeSystemCmdChannel::GetInstance();
+    if (channel == nullptr) {
+        return nullptr;
+    }
+
+    RESULT_CHECK_RETURN(env, channel->IsSystemApp(), EXCEPTION_SYSTEM_PERMISSION, "", TYPE_NONE, nullptr);
+
+    int32_t ret = channel->GetDefaultImeCfg(property);
+    if (ret != ErrorCode::NO_ERROR || property == nullptr) {
+        JsUtils::ThrowException(env, EXCEPTION_IMMS, "failed to get default input methods", TYPE_NONE);
+        IMSA_HILOGE("GetDefaultImeCfg failed or property is nullptr ret: %{public}d!", ret);
+        return nullptr;
+    }
+    return JsInputMethod::GetJsInputMethodProperty(env, *property);
 }
 } // namespace MiscServices
 } // namespace OHOS
