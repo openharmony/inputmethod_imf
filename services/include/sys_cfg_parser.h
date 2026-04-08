@@ -50,6 +50,7 @@ struct SystemConfig : public Serializable {
     std::unordered_set<std::string> defaultMainDisplayScreenList;
     std::unordered_set<std::string> supportedCapacityList;
     std::vector<SaInfo> dependentSaList;
+    std::string systemPanelAppIdentifier;
 
     bool Unmarshal(cJSON *node) override
     {
@@ -70,6 +71,7 @@ struct SystemConfig : public Serializable {
         GetValue(node, GET_NAME(defaultMainDisplayScreenList), defaultMainDisplayScreenList);
         GetValue(node, GET_NAME(supportedCapacityList), supportedCapacityList);
         GetValue(node, GET_NAME(dependentSaList), dependentSaList);
+        GetValue(node, GET_NAME(systemPanelAppIdentifier), systemPanelAppIdentifier);
         return true;
     }
 };

@@ -40,8 +40,19 @@ struct SysPanelStatus : public Parcelable {
     bool ReadFromParcel(Parcel &in)
     {
         int32_t inputTypeData = in.ReadInt32();
+        if (inputTypeData < static_cast<int32_t>(InputType::NONE) ||
+            inputTypeData >= static_cast<int32_t>(InputType::END)) {
+            IMSA_HILOGE("Invalid inputType: %{public}d", inputTypeData);
+            return false;
+        }
         inputType = static_cast<InputType>(inputTypeData);
+
         flag = in.ReadInt32();
+        if (flag < static_cast<int32_t>(FLG_FIXED) || flag > static_cast<int32_t>(FLG_CANDIDATE_COLUMN)) {
+            IMSA_HILOGE("Invalid flag: %{public}d", flag);
+            return false;
+        }
+
         width = in.ReadUint32();
         height = in.ReadUint32();
         isPanelRaised = in.ReadBool();

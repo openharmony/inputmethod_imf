@@ -883,6 +883,15 @@ std::string ImeInfoInquirer::GetSystemSpecialIme()
     return "";
 }
 
+std::string ImeInfoInquirer::GetSystemPanelAppIdentifier()
+{
+    if (!systemConfig_.systemPanelAppIdentifier.empty()) {
+        IMSA_HILOGD("systemPanelAppIdentifier: %{private}s.", systemConfig_.systemPanelAppIdentifier.c_str());
+        return systemConfig_.systemPanelAppIdentifier;
+    }
+    return "";
+}
+
 ImeNativeCfg ImeInfoInquirer::GetDefaultIme()
 {
     ImeNativeCfg imeCfg;
