@@ -115,6 +115,7 @@ public:
     bool GetCompatibleDeviceType(const std::string &bundleName, std::string &compatibleDeviceType);
     bool GetSaInfo(const std::string &saName, SaInfo &saInfo);
     bool IsUIExtension(int64_t pid);
+    bool IsSysIme(const std::string &bundleName);
 
 private:
     ImeInfoInquirer() = default;

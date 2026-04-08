@@ -145,7 +145,7 @@ bool ImeCfgManager::IsDefaultImeSet(int32_t userId)
 {
     IMSA_HILOGI("ImeCfgManager::IsDefaultImeSet enter.");
     auto ret = ImeEnabledInfoManager::GetInstance().IsDefaultImeSet(userId);
-    IMSA_HILOGI("isDefaultImeSet: %{public}d", ret);
+    IMSA_HILOGI("isDefaultImeSet: %{public}d!", ret);
     return ret;
 }
 
