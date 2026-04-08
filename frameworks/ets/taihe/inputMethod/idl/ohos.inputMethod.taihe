@@ -124,6 +124,7 @@ interface InputMethodSetting {
     GetAllInputMethodsSyncByUserId(userId: Optional<i32>): Array<InputMethodProperty>;
 
     GetCursorInfo(userId: Optional<i32>): CursorInfo;
+    GetDefaultInputMethodAbility(): InputMethodProperty;
 }
 
 struct CursorInfo {
