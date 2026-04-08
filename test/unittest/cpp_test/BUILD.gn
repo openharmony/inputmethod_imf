@@ -1373,6 +1373,7 @@ ohos_unittest("ImeControllerCpaiTest") {
     "hilog:libhilog",
     "input:libmmi-client",
     "ipc:ipc_single",
+    "samgr:samgr_proxy",
   ]
 }
 
@@ -2138,5 +2139,6 @@ ohos_unittest("ImeEventListenerManagerTest") {
     "ipc:ipc_single",
     "data_share:datashare_common",
     "data_share:datashare_consumer",
+    "samgr:samgr_proxy",
   ]
 }
