@@ -18,6 +18,7 @@
 #include <cinttypes>
 
 #include "ability_manager_client.h"
+#include "app_mgr_adapter.h"
 #include "combination_key.h"
 #ifdef IMF_RESTORE_IN_HIGH_CPU_USAGE
 #include "cpu_collector_client.h"
@@ -1951,6 +1952,7 @@ void InputMethodSystemAbility::WorkThread()
             }
             case MSG_ID_BOOT_COMPLETED: {
                 FullImeInfoManager::GetInstance().Init();
+                break;
             }
             case MSG_ID_OS_ACCOUNT_STARTED: {
                 HandleOsAccountStarted();
@@ -1981,6 +1983,15 @@ void InputMethodSystemAbility::WorkThread()
             }
             case MSG_ID_WMS_STARTED: {
                 HandleWmsStarted();
+                break;
+            }
+            case MSG_ID_TRIGGER_MAKE_SYS_IME_IMAGE: {
+                OnMakeSysImeImage();
+                break;
+            }
+            case MSG_ID_SYS_IME_IMAGE_CREATED: {
+                OnSysImeImageCreated(msg);
+                break;
             }
             default: {
                 IMSA_HILOGD("the message is %{public}d.", msg->msgId_);
@@ -2380,6 +2391,21 @@ void InputMethodSystemAbility::InitMonitors()
     ret = InitPasteboardMonitor();
     IMSA_HILOGI("init Pasteboard monitor, ret: %{public}d.", ret);
     InitSystemLanguageMonitor();
+    SubscribeAppMgrService();
+}
+
+void InputMethodSystemAbility::SubscribeAppMgrService()
+{
+    auto commonEventMgr = ImCommonEventManager::GetInstance();
+    if (commonEventMgr == nullptr) {
+        IMSA_HILOGE("commonEventMgr is nullptr.");
+        return;
+    }
+    auto appMgrStartHandler = []() {
+        AppMgrAdapter::ResetImageProcessStateObserver();
+        AppMgrAdapter::RegisterImageProcessStateObserver();
+    };
+    commonEventMgr->SubscribeAppMgrService(appMgrStartHandler);
 }
 
 bool InputMethodSystemAbility::InitHaMonitor()
@@ -3357,12 +3383,48 @@ int32_t InputMethodSystemAbility::StartSecurityIme(int32_t &userId, InputClientI
     return ErrorCode::NO_ERROR;
 }
 
+int32_t InputMethodSystemAbility::OnSysImeImageCreated(const Message *msg)
+{
+    IMSA_HILOGD("called");
+    if (msg == nullptr || msg->msgContent_ == nullptr) {
+        IMSA_HILOGE("Aborted! Message is nullptr!");
+        return ErrorCode::ERROR_NULL_POINTER;
+    }
+    MessageParcel *data = msg->msgContent_;
+    int32_t uid = -1;
+    if (!ITypesUtil::Unmarshal(*data, uid)) {
+        IMSA_HILOGE("Failed to read message parcel!");
+        return ErrorCode::ERROR_BAD_PARAMETERS;
+    }
+    auto userId = GetUserId(uid);
+    auto session = UserSessionManager::GetInstance().GetUserSession(userId);
+    if (session == nullptr) {
+        IMSA_HILOGE("user:%{public}d session not find!", userId);
+        return ErrorCode::ERROR_IMSA_USER_SESSION_NOT_FOUND;
+    }
+    session->OnSysImeImageCreated();
+    return ErrorCode::NO_ERROR;
+}
+
+int32_t InputMethodSystemAbility::OnMakeSysImeImage()
+{
+    auto sessions = UserSessionManager::GetInstance().GetUserSessions();
+    for (auto const &session : sessions) {
+        auto userSession = session.second;
+        if (userSession == nullptr) {
+            continue;
+        }
+        userSession->OnMakeSysImeImage();
+    }
+    return ErrorCode::NO_ERROR;
+}
+
 void InputMethodSystemAbility::OnSysMemChanged()
 {
-    bool waterMarkKey = SystemParamAdapter::GetInstance().GetBoolParam(SystemParamAdapter::MEMORY_WATERMARK_KEY);
+    bool isInLowMem = SystemParamAdapter::GetInstance().IsInLowMemWaterMark();
 #ifdef IMF_RESTORE_IN_HIGH_CPU_USAGE
     bool isCpuUsageHigh = false;
-    if (!waterMarkKey) {
+    if (!isInLowMem) {
         int32_t cpuUsage = GetCpuUsage();
         if (cpuUsage > CPU_USAGE_HIGH_PERCENT) {
             isCpuUsageHigh = true;
@@ -3376,7 +3438,7 @@ void InputMethodSystemAbility::OnSysMemChanged()
         if (userSession == nullptr) {
             continue;
         }
-        if (waterMarkKey) {
+        if (isInLowMem) {
             userSession->TryDisconnectIme();
         } else {
             if (!OsAccountAdapter::IsOsAccountForeground(session.first)) {

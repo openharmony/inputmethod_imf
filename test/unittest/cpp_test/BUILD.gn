@@ -626,9 +626,10 @@ ohos_unittest("InputMethodPrivateMemberTest") {
     "safwk:system_ability_fwk",
     "window_manager:libdm",
   ]
-
+  defines = []
   if (window_manager_use_sceneboard) {
     external_deps += [ "window_manager:libwm_lite" ]
+    defines += [ "SCENE_BOARD_ENABLE" ]
   } else {
     external_deps += [ "window_manager:libwm" ]
   }
@@ -1524,9 +1525,11 @@ ohos_unittest("ResSchedAdapterTest") {
   include_dirs = [
     "${inputmethod_path}/common/include",
     "${inputmethod_path}/services/adapter/res_sched_adapter/include",
+    "mock/",
   ]
   sources = [
     "${inputmethod_path}/services/adapter/res_sched_adapter/src/res_sched_adapter.cpp",
+    "mock/res_sched_client.cpp",
     "src/res_sched_adapter_test.cpp",
   ]
   configs = [ ":module_private_config" ]
@@ -1546,7 +1549,6 @@ ohos_unittest("ResSchedAdapterTest") {
     "ipc:ipc_single",
     "safwk:system_ability_fwk",
     "resource_management:global_resmgr",
-    "resource_schedule_service:ressched_client",
   ]
 }
 
