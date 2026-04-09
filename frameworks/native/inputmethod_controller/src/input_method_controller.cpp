@@ -260,6 +260,17 @@ void InputMethodController::CalibrateImmersiveParam(InputAttribute &inputAttribu
     }
 }
 
+void InputMethodController::CalibrateInputPatternParam(InputAttribute &inputAttribute)
+{
+    if (inputAttribute.inputPattern != InputAttribute::PATTERN_ONE_TIME_CODE_NUMBER) {
+        IMSA_HILOGD("no calibration required, inputPattern = %{public}d", inputAttribute.inputPattern);
+        return;
+    }
+    inputAttribute.inputPattern = static_cast<int32_t>(TextInputType::NUMBER);
+    inputAttribute.isOneTimeCodeNumberFlag = true;
+    IMSA_HILOGW("isOneTimeCodeNumberFlag = %{public}d", inputAttribute.isOneTimeCodeNumberFlag);
+}
+
 void InputMethodController::SaveTextConfig(const TextConfig &textConfig)
 {
     IMSA_HILOGD("textConfig: %{public}s.", textConfig.ToString().c_str());
@@ -270,6 +281,7 @@ void InputMethodController::SaveTextConfig(const TextConfig &textConfig)
         std::lock_guard<std::mutex> lock(textConfigLock_);
         textConfig_ = textConfig;
         CalibrateImmersiveParam(textConfig_.inputAttribute);
+        CalibrateInputPatternParam(textConfig_.inputAttribute);
         textConfig_.cursorInfo = cursorInfo;
         StringUtils::TruncateUtf16String(textConfig_.inputAttribute.placeholder, MAX_PLACEHOLDER_SIZE);
         StringUtils::TruncateUtf16String(textConfig_.inputAttribute.abilityName, MAX_ABILITY_NAME_SIZE);

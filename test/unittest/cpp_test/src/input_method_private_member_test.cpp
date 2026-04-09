@@ -1765,6 +1765,12 @@ HWTEST_F(InputMethodPrivateMemberTest, SA_SpecialScenarioCheck, TestSize.Level0)
     session.clientGroupMap_.insert_or_assign(DEFAULT_DISPLAY_ID, group);
     allow = session.SpecialScenarioCheck();
     EXPECT_FALSE(allow);
+
+    info->config.inputAttribute.isOneTimeCodeNumberFlag = true;
+    group->mapClients_.insert_or_assign(client->AsObject(), info);
+    session.clientGroupMap_.insert_or_assign(DEFAULT_DISPLAY_ID, group);
+    allow = session.SpecialScenarioCheck();
+    EXPECT_FALSE(allow);
 }
 
 /**
