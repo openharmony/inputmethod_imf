@@ -1071,9 +1071,13 @@ napi_value JsGetInputMethodSetting::GetCursorInfo(napi_env env, napi_callback_in
     int32_t userId = ImfCommonConst::DEFAULT_USER_ID;
     PARAM_CHECK_RETURN(env, argc < ARGC_TWO, "too many parameters!", TYPE_NONE, JsUtil::Const::Null(env));
     if (argc > 0) {
-        PARAM_CHECK_RETURN(env, JsUtils::GetValue(env, argv[0], userId) == napi_ok, "userId type must be int32_t!",
+        auto type = JsUtil::GetType(env, argv[0]);
+        if (type != napi_undefined && type != napi_null) {
+            PARAM_CHECK_RETURN(env, type == napi_number, "userId", TYPE_NUMBER, JsUtil::Const::Null(env));
+            PARAM_CHECK_RETURN(env, JsUtils::GetValue(env, argv[0], userId) == napi_ok, "userId type must be int!",
                 TYPE_NONE, JsUtil::Const::Null(env));
-        PARAM_CHECK_RETURN(env, userId >= 0, "userId invaild!", TYPE_NONE, JsUtil::Const::Null(env));
+            PARAM_CHECK_RETURN(env, userId >= 0, "userId invaild!", TYPE_NONE, JsUtil::Const::Null(env));
+        }
     }
     int32_t ret = ErrorCode::ERROR_EX_NULL_POINTER;
     auto instance = InputMethodController::GetInstance();
