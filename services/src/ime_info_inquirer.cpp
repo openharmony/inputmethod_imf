@@ -879,6 +879,15 @@ std::shared_ptr<ImeInfo> ImeInfoInquirer::GetDefaultImeInfo(int32_t userId)
     return info;
 }
 
+std::string ImeInfoInquirer::GetSystemPanelAppIdentifier()
+{
+    if (!systemConfig_.systemPanelAppIdentifier.empty()) {
+        IMSA_HILOGD("systemPanelAppIdentifier: %{private}s.", systemConfig_.systemPanelAppIdentifier.c_str());
+        return systemConfig_.systemPanelAppIdentifier;
+    }
+    return "";
+}
+
 ImeNativeCfg ImeInfoInquirer::GetDefaultIme()
 {
     ImeNativeCfg imeCfg;

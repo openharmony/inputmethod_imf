@@ -1110,6 +1110,8 @@ private:
     std::shared_ptr<ImcInnerListener> GetImcInnerListener();
     int32_t SetCallingWindowByIMSA(uint32_t windowId);
     void NotifyAttachFailure(int32_t errCode);
+    bool SubscribeSaStart(std::function<void()> handler, int32_t saId);
+
     struct CtrlEventInfo {
         std::chrono::steady_clock::time_point timestamp;
         std::string eventName;

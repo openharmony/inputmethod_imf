@@ -114,6 +114,8 @@ public:
     bool GetCompatibleDeviceType(const std::string &bundleName, std::string &compatibleDeviceType);
     bool GetSaInfo(const std::string &saName, SaInfo &saInfo);
     bool IsUIExtension(int64_t pid);
+    bool GetBundleInfoByBundleName(int32_t userId, const std::string &bundleName, AppExecFwk::BundleInfo &bundleInfo);
+    std::string GetSystemPanelAppIdentifier();
 
 private:
     ImeInfoInquirer() = default;
@@ -124,7 +126,6 @@ private:
         const AppExecFwk::ExtensionAbilityInfo &extension, ImeTargetString target, int32_t userId);
     std::string GetStringById(const std::string &bundleName, const std::string &moduleName, const uint32_t labelId,
         const int32_t userId);
-    bool GetBundleInfoByBundleName(int32_t userId, const std::string &bundleName, AppExecFwk::BundleInfo &bundleInfo);
     std::shared_ptr<ImeInfo> GetImeInfoFromCache(const int32_t userId, const std::string &bundleName,
         const std::string &subName);
     std::shared_ptr<ImeInfo> GetImeInfoFromBundleMgr(

@@ -2004,7 +2004,6 @@ int32_t InputMethodSystemAbility::OnUserRemoved(const Message *msg)
     }
     FullImeInfoManager::GetInstance().Delete(userId);
     NumkeyAppsManager::GetInstance().OnUserRemoved(userId);
-    RemoveWindowMonitors(userId);
     return ErrorCode::NO_ERROR;
 }
 
@@ -2706,12 +2705,34 @@ bool InputMethodSystemAbility::IsStartInputTypePermitted(int32_t userId)
 
 int32_t InputMethodSystemAbility::ConnectSystemCmd(const sptr<IRemoteObject> &channel, sptr<IRemoteObject> &agent)
 {
-    auto tokenId = IPCSkeleton::GetCallingTokenID();
-    if (!identityChecker_->HasPermission(tokenId, std::string(PERMISSION_CONNECT_IME_ABILITY))) {
-        IMSA_HILOGE("have not PERMISSION_CONNECT_IME_ABILITY!");
+    if (identityChecker_ == nullptr) {
+        IMSA_HILOGE("identityChecker_ is nullptr!");
+        return ErrorCode::ERROR_NULL_POINTER;
+    }
+    if (!identityChecker_->IsSystemApp(IPCSkeleton::GetCallingFullTokenID())) {
+        IMSA_HILOGE("not system app!");
         return ErrorCode::ERROR_STATUS_SYSTEM_PERMISSION;
     }
     auto userId = GetCallingUserId();
+    auto tokenId = IPCSkeleton::GetCallingTokenID();
+    if (!identityChecker_->HasPermission(tokenId, std::string(PERMISSION_CONNECT_IME_ABILITY))) {
+        IMSA_HILOGE("have not PERMISSION_CONNECT_IME_ABILITY!");
+        return ErrorCode::ERROR_STATUS_PERMISSION_DENIED;
+    }
+    std::string bundleName = identityChecker_->GetBundleNameByToken(tokenId);
+    if (bundleName.empty()) {
+        IMSA_HILOGE("failed to get bundle name");
+        return ErrorCode::ERROR_NULL_POINTER;
+    }
+    AppExecFwk::BundleInfo bundleInfo;
+    if (!ImeInfoInquirer::GetInstance().GetBundleInfoByBundleName(userId, bundleName, bundleInfo)) {
+        IMSA_HILOGE("failed to get bundle info");
+        return ErrorCode::ERROR_NULL_POINTER;
+    }
+    if (bundleInfo.signatureInfo.appIdentifier != ImeInfoInquirer::GetInstance().GetSystemPanelAppIdentifier()) {
+        IMSA_HILOGE("appIdentifier mismatch: %{private}s", bundleInfo.signatureInfo.appIdentifier.c_str());
+        return ErrorCode::ERROR_SYSTEM_PANEL_ERROR;
+    }
     auto session = UserSessionManager::GetInstance().GetUserSession(userId);
     if (session == nullptr) {
         IMSA_HILOGE("%{public}d session is nullptr!", userId);

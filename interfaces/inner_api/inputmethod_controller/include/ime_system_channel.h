@@ -83,6 +83,7 @@ public:
     void OnConnectCmdReady(const sptr<IRemoteObject> &agentObject);
     IMF_API int32_t GetDefaultImeCfg(
         std::shared_ptr<Property> &property, int32_t userId = ImfCommonConst::DEFAULT_USER_ID);
+    IMF_API bool IsSystemApp();
 
 private:
     ImeSystemCmdChannel();
@@ -115,6 +116,7 @@ private:
 
     std::mutex systemChannelMutex_;
     sptr<ISystemCmdChannel> systemChannelStub_;
+    std::atomic<bool> isSystemApp_{ false };
 };
 } // namespace MiscServices
 } // namespace OHOS

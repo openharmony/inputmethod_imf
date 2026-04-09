@@ -16,6 +16,7 @@
 
 #include "ani_common.h"
 #include "ime_event_monitor_manager_impl.h"
+#include "ime_system_channel.h"
 #include "input_method_controller.h"
 #include "input_method_event_listener.h"
 #include "js_utils.h"
@@ -492,6 +493,31 @@ void InputMethodSettingImpl::EnableInputMethodByUserId(::taihe::string_view bund
         return;
     }
     IMSA_HILOGI("EnableImeByUserId success!");
+}
+
+InputMethodProperty_t InputMethodSettingImpl::GetDefaultInputMethodAbility()
+{
+    InputMethodProperty_t inputMethodProperty {};
+    std::shared_ptr<Property> property = nullptr;
+    auto channel = ImeSystemCmdChannel::GetInstance();
+    if (channel == nullptr) {
+        return inputMethodProperty;
+    }
+
+    if (!(channel->IsSystemApp())) {
+        IMSA_HILOGE("not system app");
+        taihe::set_business_error(EXCEPTION_SYSTEM_PERMISSION, JsUtils::ToMessage(EXCEPTION_SYSTEM_PERMISSION));
+        return inputMethodProperty;
+    }
+
+    int32_t ret = channel->GetDefaultImeCfg(property);
+    if (ret != ErrorCode::NO_ERROR || property == nullptr) {
+        IMSA_HILOGE("GetDefaultImeCfg failed, ret:%{public}d", ret);
+        set_business_error(EXCEPTION_IMMS, JsUtils::ToMessage(EXCEPTION_IMMS));
+        return inputMethodProperty;
+    }
+    inputMethodProperty = PropertyConverter::ConvertProperty(property);
+    return inputMethodProperty;
 }
 } // namespace MiscServices
 } // namespace OHOS

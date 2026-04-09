@@ -484,5 +484,17 @@ void ImeInfoInquirer::SetImeVersionName(const std::string &versionName)
 {
     versionName_ = versionName;
 }
+
+bool ImeInfoInquirer::GetBundleInfoByBundleName(
+    int32_t userId, const std::string &bundleName, AppExecFwk::BundleInfo &bundleInfo)
+{
+    bundleInfo.signatureInfo.appIdentifier = "123";
+    return true;
+}
+
+std::string ImeInfoInquirer::GetSystemPanelAppIdentifier()
+{
+    return "123";
+}
 } // namespace MiscServices
 } // namespace OHOS
