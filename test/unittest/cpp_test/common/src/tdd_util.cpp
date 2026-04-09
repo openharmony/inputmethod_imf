@@ -459,9 +459,6 @@ void TddUtil::InitCurrentImePermissionInfo()
     }
     currentBundleNameMock_ = property->name;
     session->InitRealImeData({ property->name, property->id });
-    ImeCfgManager::GetInstance().imeConfigs_ = {
-        { userId, property->name + "/" + property->id, "", false }
-    };
 }
 
 void TddUtil::EnabledAllIme()

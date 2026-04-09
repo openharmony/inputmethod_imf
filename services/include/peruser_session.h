@@ -22,8 +22,8 @@
 #include "client_group.h"
 #include "event_status_manager.h"
 #include "iinput_method_core.h"
-#include "ime_cfg_manager.h"
 #include "ime_connection.h"
+#include "ime_enabled_info_manager.h"
 #include "ime_state_manager.h"
 #include "input_method_client_types.h"
 #include "input_method_types.h"
@@ -118,7 +118,6 @@ public:
     int32_t OnRequestHideInput(uint64_t displayId, const std::string &callerBundleName);
     void OnSecurityChange(int32_t security);
     void OnHideSoftKeyBoardSelf();
-    void NotifyImeChangeToClients(const Property &property, const SubProperty &subProperty);
     int32_t SwitchSubtype(const SubProperty &subProperty);
     int32_t SwitchSubtypeWithoutStartIme(const SubProperty &subProperty);
     void OnScbStarted(bool isScbReboot);
@@ -190,6 +189,7 @@ public:
         pid_t clientPid);
     bool IsImeInUse();
     void SetSwitchInputType(bool isSwitchInputType);
+    int32_t NotifyImeChangedToClients();
     int32_t GetCursorInfo(CursorInfoInner &cursorInfo);
 
 private:
@@ -305,7 +305,6 @@ private:
     std::pair<std::string, std::string> GetImeUsedBeforeScreenLocked();
     void SetImeUsedBeforeScreenLocked(const std::pair<std::string, std::string> &ime);
     std::shared_ptr<ImeNativeCfg> GetRealCurrentIme(bool needMinGuarantee);
-    int32_t NotifyImeChangedToClients();
     int32_t NotifySubTypeChangedToIme(const std::string &bundleName, const std::string &subName);
     bool CompareExchange(const int32_t value);
     bool IsLargeMemoryStateNeed();
