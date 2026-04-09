@@ -3078,7 +3078,7 @@ HWTEST_F(InputMethodPrivateMemberTest, PerUserSession_OnImeDied, TestSize.Level0
     pid_t pid = 10;
     auto userSession = std::make_shared<PerUserSession>(MAIN_USER_ID);
     // imeData is nullptr
-    auto currentIme = ImeCfgManager::GetInstance().GetCurrentImeCfg(MAIN_USER_ID);
+    auto currentIme = ImeEnabledInfoManager::GetInstance().GetCurrentImeCfg(MAIN_USER_ID);
     ASSERT_NE(currentIme, nullptr);
     auto temp = ImeInfoInquirer::GetInstance().systemConfig_.defaultInputMethod;
     ImeInfoInquirer::GetInstance().systemConfig_.defaultInputMethod =

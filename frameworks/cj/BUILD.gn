@@ -66,6 +66,7 @@ ohos_shared_library("cj_inputmethod_ffi") {
     "input:libmmi-client",
     "napi:cj_bind_ffi",
     "napi:cj_bind_native",
+    "samgr:samgr_proxy",
   ]
 
   public_configs = [ ":imf_public_config" ]
