@@ -155,6 +155,7 @@ public:
     static napi_value IsPanelShown(napi_env env, napi_callback_info info);
     static napi_value EnableInputMethod(napi_env env, napi_callback_info info);
     static napi_value GetInputMethodState(napi_env env, napi_callback_info info);
+    static napi_value GetCursorInfo(napi_env env, napi_callback_info info);
     static napi_value Subscribe(napi_env env, napi_callback_info info);
     static napi_value UnSubscribe(napi_env env, napi_callback_info info);
     static napi_value SubscribeImechange(napi_env env, napi_callback_info info);
