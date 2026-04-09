@@ -50,6 +50,7 @@ public:
         ::ohos::inputMethod::EnabledState enabledState);
     void EnableInputMethodByUserId(::taihe::string_view bundleName, ::taihe::string_view extensionName,
         ::ohos::inputMethod::EnabledState enabledState, taihe::optional_view<int32_t> userId);
+    CursorInfo_t GetCursorInfo(taihe::optional_view<int32_t> userId);
     InputMethodProperty_t GetDefaultInputMethodAbility();
 
 private:
@@ -166,7 +167,10 @@ public:
     {
         return InputMethodSettingImpl::GetInstance().GetAllInputMethodsSyncByUserId(userId);
     }
-
+    CursorInfo_t GetCursorInfo(taihe::optional_view<int32_t> userId)
+    {
+        return InputMethodSettingImpl::GetInstance().GetCursorInfo(userId);
+    }
     InputMethodProperty_t GetDefaultInputMethodAbility()
     {
         return InputMethodSettingImpl::GetInstance().GetDefaultInputMethodAbility();
