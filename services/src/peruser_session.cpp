@@ -1049,6 +1049,18 @@ int32_t PerUserSession::OnSetCoreAndAgent(const sptr<IInputMethodCore> &core, co
     return ErrorCode::NO_ERROR;
 }
 
+int32_t PerUserSession::GetCursorInfo(CursorInfoInner &cursorInfo)
+{
+    auto [clientGroup, clientInfo] = GetCurrentClientBoundRealIme();
+    if (clientInfo == nullptr) {
+        IMSA_HILOGE("clientInfo is nullptr!");
+        return ErrorCode::ERROR_CLIENT_NOT_FOUND;
+    }
+    cursorInfo = InputMethodTools::GetInstance().CursorInfoToInner(clientInfo->config.cursorInfo);
+    cursorInfo.displayId = clientInfo->config.inputAttribute.callingDisplayId;
+    return ErrorCode::NO_ERROR;
+}
+
 std::pair<std::shared_ptr<ClientGroup>, std::shared_ptr<InputClientInfo>> PerUserSession::GetCurrentClientBoundRealIme()
 {
     std::lock_guard<std::mutex> lock(clientGroupLock_);

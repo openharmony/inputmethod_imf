@@ -44,6 +44,7 @@ using InputAttribute_t = ::ohos::inputMethod::InputAttribute;
 using UndefinedType_t = ::ohos::inputMethod::UndefinedType;
 using AttachFailureReason_t = ohos::inputMethod::AttachFailureReason;
 using AttachOptions_t = ohos::inputMethod::AttachOptions;
+using CursorInfo_t = ::ohos::inputMethod::CursorInfo;
 namespace OHOS {
 namespace MiscServices {
 constexpr const int32_t SELECT_ALL = 0;
@@ -352,6 +353,17 @@ public:
     static InputMethodSubtype_t ConvertSubProperty(const SubProperty &obj)
     {
         return ConvertSubPropertyImpl(obj);
+    }
+
+    static CursorInfo_t ConvertCursorInfo(const CursorInfo &obj)
+    {
+        CursorInfo_t result{};
+        result.left = obj.left;
+        result.top = obj.top;
+        result.width = obj.width;
+        result.height = obj.height;
+        result.displayId = static_cast<int64_t>(obj.displayId);
+        return result;
     }
 
 private:

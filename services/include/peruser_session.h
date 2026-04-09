@@ -190,6 +190,7 @@ public:
     bool IsImeInUse();
     void SetSwitchInputType(bool isSwitchInputType);
     int32_t NotifyImeChangedToClients();
+    int32_t GetCursorInfo(CursorInfoInner &cursorInfo);
 
 private:
     struct ResetManager {

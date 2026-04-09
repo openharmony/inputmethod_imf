@@ -98,6 +98,7 @@ public:
     ErrCode IsCapacitySupport(int32_t capacity, bool &isSupport) override;
     ErrCode BindImeMirror(const sptr<IInputMethodCore> &core, const sptr<IRemoteObject> &agent) override;
     ErrCode UnbindImeMirror() override;
+    ErrCode GetCursorInfo(int32_t userId, CursorInfoInner &cursorInfo) override;
     int32_t GetCallingUserId();
     int32_t GetCallingUserId(int32_t &outputUserId, int32_t inputUserId = -1);
 
