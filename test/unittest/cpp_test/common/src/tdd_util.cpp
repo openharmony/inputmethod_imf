@@ -462,9 +462,6 @@ void TddUtil::InitCurrentImePermissionInfo()
     currentBundleNameMock_ = property->name;
     sptr<AAFwk::IAbilityConnection> connection = nullptr;
     session->InitRealImeData(connection, { property->name, property->id });
-    ImeCfgManager::GetInstance().imeConfigs_ = {
-        { userId, property->name + "/" + property->id, "", false }
-    };
 }
 
 void TddUtil::EnabledAllIme()

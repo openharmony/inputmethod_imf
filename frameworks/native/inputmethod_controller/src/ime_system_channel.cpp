@@ -122,12 +122,13 @@ int32_t ImeSystemCmdChannel::RunConnectSystemCmd()
     sptr<IRemoteObject> agent = nullptr;
     static constexpr uint32_t RETRY_INTERVAL = 100;
     static constexpr uint32_t BLOCK_RETRY_TIMES = 5;
-    if (!BlockRetry(RETRY_INTERVAL, BLOCK_RETRY_TIMES, [&agent, this, proxy]() -> bool {
-            int32_t ret = proxy->ConnectSystemCmd(systemChannelStub_->AsObject(), agent);
+    int32_t ret = ErrorCode::NO_ERROR;
+    if (!BlockRetry(RETRY_INTERVAL, BLOCK_RETRY_TIMES, [&agent, this, proxy, &ret]() -> bool {
+            ret = proxy->ConnectSystemCmd(systemChannelStub_->AsObject(), agent);
             return ret == ErrorCode::NO_ERROR;
         })) {
-        IMSA_HILOGE("failed to connect system cmd!");
-        return ErrorCode::ERROR_SYSTEM_CMD_CHANNEL_ERROR;
+        IMSA_HILOGE("failed to connect system cmd, ret: %{public}d", ret);
+        return ret;
     }
     OnConnectCmdReady(agent);
     IMSA_HILOGI("connect system cmd success.");
@@ -294,6 +295,29 @@ int32_t ImeSystemCmdChannel::GetDefaultImeCfg(std::shared_ptr<Property> &propert
         return ret;
     }
     property = std::make_shared<Property>(prop);
+    return ret;
+}
+
+bool ImeSystemCmdChannel::IsSystemApp()
+{
+    IMSA_HILOGD("start");
+    if (isSystemApp_.load()) {
+        return true;
+    }
+    auto proxy = GetSystemAbilityProxy();
+    if (proxy == nullptr) {
+        IMSA_HILOGE("failed to get imsa proxy!");
+        return false;
+    }
+    bool ret = false;
+    int32_t errCode = proxy->IsSystemApp(ret);
+    if (errCode != ErrorCode::NO_ERROR) {
+        IMSA_HILOGE("failed to check system app, errCode: %{public}d", errCode);
+        return false;
+    }
+    if (ret) {
+        isSystemApp_.store(true);
+    }
     return ret;
 }
 // LCOV_EXCL_STOP
