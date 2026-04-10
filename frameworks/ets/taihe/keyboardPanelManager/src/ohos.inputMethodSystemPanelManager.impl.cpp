@@ -127,7 +127,9 @@ void SendPrivateCommandSync(
     }
 
     auto nativeMap = Convert(commandData);
-    if (!TextConfig::IsPrivateCommandValid(nativeMap)) {
+    // Validate user-provided commands BEFORE adding sys_cmd field
+    // This ensures user commands comply with spec: max 5 commands, 32KB total size
+    if (!ImeSystemCmdChannel::IsUserPrivateCommandValid(nativeMap)) {
         IMSA_HILOGE("privateCommand invalid.");
         taihe::set_business_error(IMFErrorCode::EXCEPTION_PARAMCHECK, "commandData size limit 32KB, count limit 5.");
         return;
