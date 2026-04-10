@@ -40,6 +40,7 @@ ohos_executable("ime") {
     "hilog:libhilog",
     "input:libmmi-client",
     "ipc:ipc_single",
+    "samgr:samgr_proxy",
   ]
 
   install_enable = true

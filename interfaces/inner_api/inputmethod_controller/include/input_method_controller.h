@@ -428,6 +428,18 @@ public:
     int32_t GetTextConfig(TextTotalConfig &config);
 
     /**
+     * @brief Get cursor info.
+     *
+     * This function is used to get cursor info of current client.
+     *
+     * @param cursorInfo Indicates the cursor info of current client that will be obtained.
+     * @param userId Indicates the user id.
+     * @return Returns 0 for success, others for failure.
+     * @since 12
+     */
+    IMF_API int32_t GetCursorInfo(CursorInfo &cursorInfo, int32_t userId = ImfCommonConst::DEFAULT_USER_ID);
+
+    /**
      * @brief Get current input method property.
      *
      * This function is used to get current input method property.
@@ -1103,6 +1115,7 @@ private:
     void ReportClientShow(int32_t eventCode, int32_t errCode, ClientType type);
     void GetWindowScaleCoordinate(uint32_t windowId, CursorInfo &cursorInfo);
     void CalibrateImmersiveParam(InputAttribute &inputAttribute);
+    void CalibrateInputPatternParam(InputAttribute &inputAttribute);
     void ClearAgentInfo();
     int32_t SendRequestToAllAgents(std::function<int32_t(std::shared_ptr<IInputMethodAgent>)> task);
     int32_t SendRequestToImeMirrorAgent(std::function<int32_t(std::shared_ptr<IInputMethodAgent>)> task);
@@ -1110,6 +1123,8 @@ private:
     std::shared_ptr<ImcInnerListener> GetImcInnerListener();
     int32_t SetCallingWindowByIMSA(uint32_t windowId);
     void NotifyAttachFailure(int32_t errCode);
+    bool SubscribeSaStart(std::function<void()> handler, int32_t saId);
+
     struct CtrlEventInfo {
         std::chrono::steady_clock::time_point timestamp;
         std::string eventName;

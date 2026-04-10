@@ -255,15 +255,19 @@ ohos_unittest("InputMethodServiceTest") {
   }
   module_out_path = module_output_path
 
-  sources = [ "src/input_method_service_test.cpp" ]
+  sources = [
+    "src/input_method_service_test.cpp"
+  ]
 
   configs = [ ":module_private_config" ]
 
   deps = [
     "${inputmethod_path}/interfaces/inner_api/inputmethod_ability:inputmethod_ability",
-    "${inputmethod_path}/interfaces/inner_api/inputmethod_controller:inputmethod_client_static",
     "${inputmethod_path}/services/adapter/settings_data_provider:settings_data_static",
     "${inputmethod_path}/services:inputmethod_service_static",
+    "${inputmethod_path}/interfaces/inner_api/inputmethod_ability:inputmethod_ability_static",
+    "${inputmethod_path}/interfaces/inner_api/inputmethod_controller:input_method_agent_proxy",
+    "${inputmethod_path}/interfaces/inner_api/inputmethod_controller:input_method_agent_stub",
     "${inputmethod_path}/test/common:inputmethod_test_common",
     "${inputmethod_path}/test/unittest/cpp_test/common:inputmethod_tdd_util",
     "${inputmethod_path}/test/unittest/resource/ohos_test:copy_ohos_test",
@@ -281,6 +285,7 @@ ohos_unittest("InputMethodServiceTest") {
     "input:libmmi-client",
     "ipc:ipc_single",
     "napi:ace_napi",
+    "safwk:system_ability_fwk",
     "window_manager:libdm",
     "data_share:datashare_common",
     "data_share:datashare_consumer",
@@ -1369,6 +1374,7 @@ ohos_unittest("ImeControllerCpaiTest") {
     "hilog:libhilog",
     "input:libmmi-client",
     "ipc:ipc_single",
+    "samgr:samgr_proxy",
   ]
 }
 
@@ -1404,6 +1410,8 @@ ohos_unittest("FullImeInfoManagerTest") {
     "os_account:os_account_innerkits",
     "input:libmmi-client",
     "ipc:ipc_single",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
   ]
 }
 
@@ -2028,6 +2036,8 @@ ohos_unittest("ImfExtMockTest") {
     "eventhandler:libeventhandler",
     "googletest:gtest_main",
     "hilog:libhilog",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
   ]
 }
 
@@ -2131,5 +2141,6 @@ ohos_unittest("ImeEventListenerManagerTest") {
     "ipc:ipc_single",
     "data_share:datashare_common",
     "data_share:datashare_consumer",
+    "samgr:samgr_proxy",
   ]
 }
