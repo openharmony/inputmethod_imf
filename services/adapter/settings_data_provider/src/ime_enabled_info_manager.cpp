@@ -228,6 +228,7 @@ int32_t ImeEnabledInfoManager::Update(
         IMSA_HILOGE("%{public}d update enable info failed:%{public}d.", userId, ret);
         return ErrorCode::ERROR_ENABLE_IME;
     }
+    // if sys ime adapter full and basic mode, need destroy image in here
     if (isCurrentIme) {
         NotifyCurrentImeStatusChanged(userId, bundleName, iter->enabledStatus);
     }
@@ -746,6 +747,13 @@ ImeNativeCfg ImeEnabledInfoManager::GetUserCfgIme(int32_t userId)
     }
     IMSA_HILOGW("%{public}d not set default ime.", userId);
     return nativeInfo;
+}
+
+bool ImeEnabledInfoManager::IsUserCfgIme(int32_t userId, const std::string &bundleName)
+{
+    auto userCfgIme = GetUserCfgIme(userId);
+    IMSA_HILOGD("%{public}d has default ime:%{public}s.", userId, userCfgIme.bundleName.c_str());
+    return !bundleName.empty() && bundleName == userCfgIme.bundleName;
 }
 
 bool ImeEnabledInfoManager::IsDefaultImeSet(int32_t userId)
