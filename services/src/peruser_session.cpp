@@ -20,6 +20,7 @@
 #include <cinttypes>
 #include <algorithm>
 #include "ability_manager_client.h"
+#include "app_mgr_adapter.h"
 #include "full_ime_info_manager.h"
 #include "identity_checker_impl.h"
 #include "im_common_event_manager.h"
@@ -32,6 +33,7 @@
 #include "numkey_apps_manager.h"
 #include "on_demand_start_stop_sa.h"
 #include "os_account_adapter.h"
+#include "res_sched_adapter.h"
 #include "scene_board_judgement.h"
 #include "system_ability_definition.h"
 #include "system_param_adapter.h"
@@ -74,6 +76,9 @@ constexpr int32_t WAIT_ATTACH_FINISH_MAX_TIMES = 20;
 constexpr uint32_t MAX_SCB_START_COUNT = 2;
 constexpr int32_t PROXY_REGISTERATION_TIME_INTERVAL = 1; // 1s
 constexpr uint32_t MAX_REGISTRATIONS_NUM = 3;
+constexpr const char *MAKE_IMAGE_TIMEOUT_TASK = "imf_imageTimeoutTask";
+constexpr int32_t MAKE_IMAGE_TIMEOUT = 2 * 60 * 1000; // two min
+constexpr int32_t E_IMAGE_CREATING = -2; // same with ForkallErrCode::E_IMAGE_CREATING, never modify
 PerUserSession::PerUserSession(int userId) : userId_(userId) { }
 
 PerUserSession::PerUserSession(int32_t userId, const std::shared_ptr<AppExecFwk::EventHandler> &eventHandler)
@@ -88,7 +93,10 @@ PerUserSession::PerUserSession(int32_t userId, const std::shared_ptr<AppExecFwk:
     }
 }
 
-PerUserSession::~PerUserSession() { }
+PerUserSession::~PerUserSession()
+{
+    StopImageTimeoutTask();
+}
 
 int PerUserSession::AddClientInfo(sptr<IRemoteObject> inputClient, const InputClientInfo &clientInfo)
 {
@@ -217,7 +225,10 @@ void PerUserSession::OnImeDied(const sptr<IInputMethodCore> &remote, ImeType typ
     if (remote == nullptr) {
         return;
     }
-    IMSA_HILOGI("type: %{public}d.", type);
+    isBlockStartedByLowMem_.store(false);
+    auto disconnectedByRss = disconnectedByRss_.load();
+    disconnectedByRss_.store(false);
+    IMSA_HILOGI("type/disconnectedByRss: %{public}d/%{public}d.", type, disconnectedByRss);
     auto imeData = GetImeData(pid, type);
     if (imeData != nullptr && imeData->imeStatus == ImeStatus::EXITING) {
         RemoveImeData(pid);
@@ -243,24 +254,42 @@ void PerUserSession::OnImeDied(const sptr<IInputMethodCore> &remote, ImeType typ
             return;
         }
     }
+    HandleSysImeInDied(type, disconnectedByRss);
+}
+
+int32_t PerUserSession::HandleSysImeInDied(ImeType type, bool disconnectedByRss)
+{
     auto currentImeInfo = ImeEnabledInfoManager::GetInstance().GetCurrentImeCfg(userId_);
     if (currentImeInfo == nullptr) {
         IMSA_HILOGE("currentImeInfo is nullptr!");
-        return;
+        return ErrorCode::ERROR_EX_ILLEGAL_STATE;
     }
     auto defaultImeInfo = ImeInfoInquirer::GetInstance().GetDefaultImeCfgProp();
     if (defaultImeInfo == nullptr) {
         IMSA_HILOGE("defaultImeInfo is nullptr!");
-        return;
+        return ErrorCode::ERROR_EX_ILLEGAL_STATE;
     }
-    if (type == ImeType::IME && currentImeInfo->bundleName == defaultImeInfo->name) {
-        if (ImeInfoInquirer::GetInstance().IsMemoryWatermarkEnabled() &&
-            SystemParamAdapter::GetInstance().GetBoolParam(SystemParamAdapter::MEMORY_WATERMARK_KEY)) {
-            isBlockStartedByLowMem_.store(true);
-        } else {
-            StartImeInImeDied();
-        }
+    if (type != ImeType::IME || currentImeInfo->bundleName != defaultImeInfo->name) {
+        IMSA_HILOGD("%{public}d/%{public}d is not real ime or current ime:%{public}s!", userId_, type,
+            currentImeInfo->bundleName.c_str());
+        return ErrorCode::NO_ERROR;
     }
+    bool makeImage = false;
+    if (!SystemParamAdapter::GetInstance().IsInLowMemWaterMark() && disconnectedByRss) {
+        auto makeRet = MakeImage(defaultImeInfo->name, defaultImeInfo->id);
+        makeImage = makeRet.first;
+    }
+    if (makeImage) {
+        IMSA_HILOGI("%{public}d need make sys ime image.", userId_);
+        return ErrorCode::NO_ERROR;
+    }
+    bool isInLowMem = ImeInfoInquirer::GetInstance().IsMemoryWatermarkEnabled() &&
+                      SystemParamAdapter::GetInstance().IsInLowMemWaterMark();
+    isBlockStartedByLowMem_.store(isInLowMem);
+    if (!isInLowMem) {
+        StartImeInImeDied();
+    }
+    return ErrorCode::NO_ERROR;
 }
 
 int32_t PerUserSession::OnHideCurrentInput(uint64_t displayGroupId)
@@ -1868,14 +1897,12 @@ int32_t PerUserSession::StartInputService(const std::shared_ptr<ImeNativeCfg> &i
     if (ret != ErrorCode::NO_ERROR) {
         return ret;
     }
-    InitRealImeData({ imeToStart->bundleName, imeToStart->extName }, ime);
-    isImeStarted_.Clear(false);
-    sptr<AAFwk::IAbilityConnection> connection = new (std::nothrow) ImeConnection();
-    if (connection == nullptr) {
-        IMSA_HILOGE("failed to create connection!");
-        return ErrorCode::ERROR_IMSA_MALLOC_FAILED;
+    sptr<AAFwk::IAbilityConnection> connection = nullptr;
+    ret = InitRealImeData(connection, { imeToStart->bundleName, imeToStart->extName }, ime);
+    if (ret != ErrorCode::NO_ERROR) {
+        return ret;
     }
-    SetImeConnection(connection);
+    isImeStarted_.Clear(false);
     auto want = GetWant(imeToStart);
     IMSA_HILOGI("connect %{public}s start!", imeToStart->imeId.c_str());
     ret = AAFwk::AbilityManagerClient::GetInstance()->ConnectExtensionAbility(want, connection, userId_);
@@ -1883,7 +1910,6 @@ int32_t PerUserSession::StartInputService(const std::shared_ptr<ImeNativeCfg> &i
         IMSA_HILOGE("connect %{public}s failed, ret: %{public}d!", imeToStart->imeId.c_str(), ret);
         InputMethodSysEvent::GetInstance().InputmethodFaultReporter(
             ErrorCode::ERROR_IMSA_IME_CONNECT_FAILED, imeToStart->imeId, "failed to start ability.");
-        SetImeConnection(nullptr);
         return ErrorCode::ERROR_IMSA_IME_CONNECT_FAILED;
     }
     if (!skipWaitAfterTimeout) {
@@ -2416,25 +2442,32 @@ BlockQueue<SwitchInfo>& PerUserSession::GetSwitchQueue()
     return switchQueue_;
 }
 
-int32_t PerUserSession::InitRealImeData(
+int32_t PerUserSession::InitRealImeData(sptr<AAFwk::IAbilityConnection> &connection,
     const std::pair<std::string, std::string> &ime, const std::shared_ptr<ImeNativeCfg> &imeNativeCfg)
 {
     std::lock_guard<std::mutex> lock(realImeDataLock_);
     if (realImeData_ != nullptr) {
         return ErrorCode::NO_ERROR;
     }
-    realImeData_ = std::make_shared<ImeData>(nullptr, nullptr, nullptr, -1);
+    auto imeData = std::make_shared<ImeData>(nullptr, nullptr, nullptr, -1);
 #ifdef IMF_SCREENLOCK_MGR_ENABLE
-    realImeData_->isStartedInScreenLocked = IsDeviceLockAndScreenLocked();
+    imeData->isStartedInScreenLocked = IsDeviceLockAndScreenLocked();
 #endif
-    realImeData_->type = ImeType::IME;
-    realImeData_->startTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-    realImeData_->ime = ime;
-    realImeData_->imeStateManager = ImeStateManagerFactory::GetInstance().CreateImeStateManager(-1, -1,
+    imeData->type = ImeType::IME;
+    imeData->startTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+    imeData->ime = ime;
+    imeData->imeStateManager = ImeStateManagerFactory::GetInstance().CreateImeStateManager(-1, -1,
         [this] { StopCurrentIme(); });
     if (imeNativeCfg != nullptr && !imeNativeCfg->imeExtendInfo.privateCommand.empty()) {
-        realImeData_->imeExtendInfo.privateCommand = imeNativeCfg->imeExtendInfo.privateCommand;
+        imeData->imeExtendInfo.privateCommand = imeNativeCfg->imeExtendInfo.privateCommand;
     }
+    connection = new (std::nothrow) ImeConnection();
+    if (connection == nullptr) {
+        IMSA_HILOGE("failed to create connection!");
+        return ErrorCode::ERROR_IMSA_MALLOC_FAILED;
+    }
+    imeData->connection = connection;
+    realImeData_ = imeData;
     return ErrorCode::NO_ERROR;
 }
 
@@ -3229,7 +3262,14 @@ int32_t PerUserSession::TryStartIme()
         IMSA_HILOGI("ime is not blocked in starting by low mem, no need to deal.");
         return ErrorCode::ERROR_OPERATION_NOT_ALLOWED;
     }
+    IMSA_HILOGI("run in.");
     isBlockStartedByLowMem_.store(false);
+    auto sysIme = ImeInfoInquirer::GetInstance().GetDefaultIme();
+    auto [makeImage, failedReason] = MakeImage(sysIme.bundleName, sysIme.extName);
+    if (makeImage) {
+        IMSA_HILOGI("%{public}d need make sys ime image.", userId_);
+        return ErrorCode::NO_ERROR;
+    }
     auto imeData = GetRealImeData();
     if (imeData != nullptr) {
         IMSA_HILOGI("has running ime:%{public}s, no need to deal.", imeData->ime.first.c_str());
@@ -3241,7 +3281,7 @@ int32_t PerUserSession::TryStartIme()
         return ErrorCode::ERROR_OPERATION_NOT_ALLOWED;
     }
 #ifndef IMF_ON_DEMAND_START_STOP_SA_ENABLE
-    if (!ImeStateManagerFactory::GetInstance().GetDynamicStartIme()) {
+    if (!ImeStateManagerFactory::GetInstance().GetDynamicStartIme() && IsWmsReady()) {
         StartImeIfInstalled();
     }
 #endif
@@ -3251,7 +3291,7 @@ int32_t PerUserSession::TryStartIme()
 int32_t PerUserSession::TryDisconnectIme()
 {
     auto imeData = GetRealImeData();
-    if (imeData == nullptr) {
+    if (imeData == nullptr || imeData->imeStatus == ImeStatus::STARTING) {
         return ErrorCode::ERROR_IME_NOT_STARTED;
     }
     if (GetAttachCount() != 0) {
@@ -3267,40 +3307,13 @@ int32_t PerUserSession::TryDisconnectIme()
     if (abilityMgr == nullptr) {
         return ErrorCode::ERROR_IMSA_NULLPTR;
     }
-    auto imeConnection = GetImeConnection();
-    if (imeConnection == nullptr) {
-        return ErrorCode::ERROR_IME_NOT_STARTED;
-    }
-    auto ret = abilityMgr->DisconnectAbility(imeConnection);
+    auto ret = abilityMgr->DisconnectAbility(imeData->connection);
     if (ret != ErrorCode::NO_ERROR) {
         IMSA_HILOGE("disConnect %{public}s/%{public}s failed, ret:%{public}d.", imeData->ime.first.c_str(),
             imeData->ime.second.c_str(), ret);
         return ErrorCode::ERROR_IMSA_IME_DISCONNECT_FAILED;
     }
-    ClearImeConnection(imeConnection);
     return ErrorCode::NO_ERROR;
-}
-
-void PerUserSession::SetImeConnection(const sptr<AAFwk::IAbilityConnection> &connection)
-{
-    std::lock_guard<std::mutex> lock(connectionLock_);
-    connection_ = connection;
-}
-
-sptr<AAFwk::IAbilityConnection> PerUserSession::GetImeConnection()
-{
-    std::lock_guard<std::mutex> lock(connectionLock_);
-    return connection_;
-}
-
-void PerUserSession::ClearImeConnection(const sptr<AAFwk::IAbilityConnection> &connection)
-{
-    std::lock_guard<std::mutex> lock(connectionLock_);
-    if (connection == nullptr || connection_ == nullptr || connection->AsObject() != connection_->AsObject()) {
-        return;
-    }
-    IMSA_HILOGI("clear imeConnection.");
-    connection_ = nullptr;
 }
 
 int32_t PerUserSession::IsRequestOverLimit(TimeLimitType timeLimitType, int32_t resetTimeOut, uint32_t restartNum)
@@ -3357,6 +3370,162 @@ bool PerUserSession::IsImeInUse()
         return false;
     }
     return data->imeStateManager->IsImeInUse();
+}
+
+std::pair<bool, ImageFailedReason> PerUserSession::NeedMakeImage(
+    const std::string &bundleName, const std::string &extName)
+{
+    if (!ImeInfoInquirer::GetInstance().IsSysIme(bundleName)) {
+        IMSA_HILOGD("%{public}d/%{public}s not sys ime!", userId_, bundleName.c_str());
+        return { false, ImageFailedReason::FAILED_OTHERS };
+    }
+    bool isVerified = false;
+    auto ret = OsAccountAdapter::IsOsAccountVerified(userId_, isVerified);
+    if (ret != ErrorCode::NO_ERROR || !isVerified) {
+        IMSA_HILOGW("userId/ret/isVerified:%{public}d/%{public}d/%{public}d.", userId_, ret, isVerified);
+        return { false, ImageFailedReason::FAILED_OTHERS };
+    }
+    if (!NeedStartIme(ImeStartScene::MAKE_IMAGE)) {
+        IMSA_HILOGW("userId:%{public}d is in scene that unsupport make image.", userId_);
+        return { false, ImageFailedReason::FAILED_OTHERS };
+    }
+    auto imeData = GetRealImeData();
+    if ((imeData != nullptr && imeData->ime.first == bundleName)
+        || (ImeInfoInquirer::GetInstance().IsRunningIme(userId_, bundleName))) {
+        IMSA_HILOGD("%{public}d/%{public}s is running ime.", userId_, bundleName.c_str());
+        return { false, ImageFailedReason::FAILED_HAS_RUNNING_IME };
+    }
+    return { true, ImageFailedReason::FAILED_NONE };
+}
+
+std::pair<bool, ImageFailedReason> PerUserSession::MakeImage(const std::string &bundleName, const std::string &extName)
+{
+    auto makeRet = NeedMakeImage(bundleName, extName);
+    if (!makeRet.first) {
+        return makeRet;
+    }
+    auto ret = AppMgrAdapter::RegisterImageProcessStateObserver();
+    if (ret != ErrorCode::NO_ERROR) {
+        IMSA_HILOGW("userId:%{public}d register image listener failed.", ret);
+    }
+    auto imeCfg = std::make_shared<ImeNativeCfg>();
+    imeCfg->bundleName = bundleName;
+    imeCfg->extName = extName;
+    imeCfg->imeId = bundleName + "/" + extName;
+    ret = ResSchedAdapter::NotifyMakeImage(userId_, GetWant(imeCfg));
+    if (ret != ErrorCode::NO_ERROR) {
+        if (ret == E_IMAGE_CREATING) {
+            IMSA_HILOGI("userId:%{public}d sys ime is creating.", userId_);
+            return { true, ImageFailedReason::FAILED_NONE };
+        }
+        return { false, ImageFailedReason::FAILED_OTHERS };
+    }
+    StartImageTimeoutTask();
+    return { true, ImageFailedReason::FAILED_NONE };
+}
+
+void PerUserSession::StartImageTimeoutTask()
+{
+    IMSA_HILOGD("run in.");
+    std::lock_guard<std::mutex> lock(imageTimeoutTaskLock_);
+    if (eventHandler_ == nullptr) {
+        return;
+    }
+    eventHandler_->RemoveTask(MAKE_IMAGE_TIMEOUT_TASK);
+    eventHandler_->PostTask(
+        [=] {
+            IMSA_HILOGW("userId:%{public}d make sys ime timeout.", userId_);
+            StartImeInSysImageChanged();
+        },
+        MAKE_IMAGE_TIMEOUT_TASK, MAKE_IMAGE_TIMEOUT, AppExecFwk::EventQueue::Priority::VIP);
+}
+
+void PerUserSession::StopImageTimeoutTask()
+{
+    IMSA_HILOGD("run in.");
+    std::lock_guard<std::mutex> lock(imageTimeoutTaskLock_);
+    if (eventHandler_ == nullptr) {
+        return;
+    }
+    eventHandler_->RemoveTask(MAKE_IMAGE_TIMEOUT_TASK);
+}
+
+bool PerUserSession::NeedStartIme(ImeStartScene scene)
+{
+#ifdef IMF_ON_DEMAND_START_STOP_SA_ENABLE
+    return false;
+#endif
+    if (ImeStateManagerFactory::GetInstance().GetDynamicStartIme()) {
+        IMSA_HILOGI("userId:%{public}d dynamic start ime!", userId_);
+        return false;
+    }
+    if (IsLargeMemoryStateNeed()) {
+        IMSA_HILOGI("userId:%{public}d in large mem scene!", userId_);
+        return false;
+    }
+    if (!OsAccountAdapter::IsOsAccountForeground(userId_)) {
+        IMSA_HILOGW("userId:%{public}d in background.", userId_);
+        return false;
+    }
+    if (!IsWmsReady()) {
+        IMSA_HILOGW("userId:%{public}d wms not ready.", userId_);
+        return false;
+    }
+    if (scene != ImeStartScene::MAKE_IMAGE) {
+        if (ImeInfoInquirer::GetInstance().IsMemoryWatermarkEnabled() &&
+            SystemParamAdapter::GetInstance().IsInLowMemWaterMark()) {
+            isBlockStartedByLowMem_.store(true);
+            IMSA_HILOGI("userId:%{public}d low mem!", userId_);
+            return false;
+        }
+    }
+    return true;
+}
+
+void PerUserSession::OnSysImeImageCreated()
+{
+    StopImageTimeoutTask();
+    StartImeInSysImageChanged();
+}
+
+int32_t PerUserSession::StartImeInSysImageChanged()
+{
+    auto imeData = GetRealImeData();
+    if (imeData != nullptr) {
+        IMSA_HILOGI("userId:%{public}d has running ime:%{public}s.", userId_, imeData->ime.first.c_str());
+        return ErrorCode::ERROR_IME_HAS_STARTED;
+    }
+    auto sysIme = ImeInfoInquirer::GetInstance().GetDefaultIme();
+    if (!ImeEnabledInfoManager::GetInstance().IsUserCfgIme(userId_, sysIme.bundleName)) {
+        IMSA_HILOGI("sys ime is not user:%{public}d cfg ime!", userId_);
+        return ErrorCode::NO_ERROR;
+    }
+    if (!NeedStartIme(ImeStartScene::NORMAL_START)) {
+        IMSA_HILOGI("userId:%{public}d in scene that unsupport start ime.", userId_);
+        return ErrorCode::ERROR_SCENE_UNSUPPORTED;
+    }
+    StartCurrentIme();
+    return ErrorCode::NO_ERROR;
+}
+
+int32_t PerUserSession::OnMakeSysImeImage()
+{
+    auto sysIme = ImeInfoInquirer::GetInstance().GetDefaultIme();
+    auto [makeImage, failedReason] = MakeImage(sysIme.bundleName, sysIme.extName);
+    if (makeImage) {
+        IMSA_HILOGI("%{public}d need make sys ime image.", userId_);
+        return ErrorCode::NO_ERROR;
+    }
+    if (ImeEnabledInfoManager::GetInstance().IsUserCfgIme(userId_, sysIme.bundleName) &&
+        failedReason == ImageFailedReason::FAILED_HAS_RUNNING_IME &&
+        !SystemParamAdapter::GetInstance().IsInLowMemWaterMark()) {
+        auto ret = TryDisconnectIme();
+        if (ret == ErrorCode::NO_ERROR) {
+            disconnectedByRss_.store(true);
+        }
+        IMSA_HILOGI("userId:%{public}d disconnect ime:%{public}d.", userId_, ret);
+    }
+    return ErrorCode::NO_ERROR;
 }
 } // namespace MiscServices
 } // namespace OHOS

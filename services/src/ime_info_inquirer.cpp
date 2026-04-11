@@ -16,6 +16,7 @@
 
 #include <cinttypes>
 
+#include "app_mgr_adapter.h"
 #include "app_mgr_client.h"
 #include "bundle_mgr_client.h"
 #include "display_adapter.h"
@@ -1152,12 +1153,7 @@ std::vector<std::string> ImeInfoInquirer::GetRunningIme(int32_t userId)
 {
     std::vector<std::string> bundleNames;
     std::vector<RunningProcessInfo> infos;
-    auto appMgrClient = DelayedSingleton<AppMgrClient>::GetInstance();
-    if (appMgrClient == nullptr) {
-        IMSA_HILOGE("appMgrClient is nullptr.");
-        return bundleNames;
-    }
-    auto ret = appMgrClient->GetProcessRunningInfosByUserId(infos, userId);
+    auto ret = AppMgrAdapter::GetRunningProcessInfosByUserId(userId, infos);
     if (ret != ErrorCode::NO_ERROR) {
         IMSA_HILOGE("GetAllRunningProcesses failed, ret: %{public}d!", ret);
         return bundleNames;
@@ -1174,12 +1170,7 @@ std::vector<std::string> ImeInfoInquirer::GetRunningIme(int32_t userId)
 bool ImeInfoInquirer::IsUIExtension(int64_t pid)
 {
     RunningProcessInfo info;
-    auto appMgrClient = DelayedSingleton<AppMgrClient>::GetInstance();
-    if (appMgrClient == nullptr) {
-        IMSA_HILOGE("appMgrClient is nullptr.");
-        return false;
-    }
-    auto ret = appMgrClient->GetRunningProcessInfoByPid(pid, info);
+    auto ret = AppMgrAdapter::GetRunningProcessInfoByPid(pid, info);
     if (ret != ErrorCode::NO_ERROR) {
         IMSA_HILOGE("GetRunningProcessInfosByPid:%{public}" PRId64 " failed: %{public}d!", pid, ret);
         return false;
@@ -1288,12 +1279,7 @@ std::string ImeInfoInquirer::GetTargetString(
 bool ImeInfoInquirer::IsInputMethodExtension(pid_t pid)
 {
     RunningProcessInfo info;
-    auto appMgrClient = DelayedSingleton<AppMgrClient>::GetInstance();
-    if (appMgrClient == nullptr) {
-        IMSA_HILOGE("appMgrClient is nullptr.");
-        return false;
-    }
-    appMgrClient->GetRunningProcessInfoByPid(pid, info);
+    AppMgrAdapter::GetRunningProcessInfoByPid(pid, info);
     return info.extensionType_ == ExtensionAbilityType::INPUTMETHOD;
 }
 
@@ -1349,6 +1335,11 @@ bool ImeInfoInquirer::GetSaInfo(const std::string &saName, SaInfo &saInfo)
     }
     saInfo = *iter;
     return true;
+}
+
+bool ImeInfoInquirer::IsSysIme(const std::string &bundleName)
+{
+    return !bundleName.empty() && bundleName == GetDefaultIme().bundleName;
 }
 } // namespace MiscServices
 } // namespace OHOS
