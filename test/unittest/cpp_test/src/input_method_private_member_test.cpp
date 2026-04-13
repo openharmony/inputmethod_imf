@@ -4469,10 +4469,10 @@ HWTEST_F(InputMethodPrivateMemberTest, PerUserSession_NeedStartIme_001, TestSize
     userSession->largeMemoryState_ = LargeMemoryState::LARGE_MEMORY_NOT_NEED;
     userSession->userId_ = INVALID_USER_ID;
     need = userSession->NeedStartIme(ImeStartScene::NORMAL_START);
+    userSession->userId_ = TddUtil::GetCurrentUserId();
     EXPECT_FALSE(need);
 #ifdef SCENE_BOARD_ENABLE
     // wms not ready, return false
-    userSession->userId_ = TddUtil::GetCurrentUserId();
     WmsConnectionObserver::connectedUserId_.clear();
     need = userSession->NeedStartIme(ImeStartScene::NORMAL_START);
     EXPECT_FALSE(need);
