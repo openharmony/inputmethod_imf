@@ -197,6 +197,7 @@ struct InputAttribute {
     enterKeyType: EnterKeyType;
     placeholder: Optional<String>;
     abilityName: Optional<String>;
+    consumeKeyEvents: Optional<bool>;
 }
 
 struct TextConfig {
