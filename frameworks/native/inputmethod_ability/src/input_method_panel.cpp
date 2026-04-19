@@ -233,7 +233,11 @@ int32_t InputMethodPanel::SetPanelProperties()
             return ErrorCode::ERROR_OPERATE_PANEL;
         }
         surfaceNode->SetFrameGravity(Rosen::Gravity::TOP_LEFT);
-        Rosen::RSTransactionProxy::GetInstance()->FlushImplicitTransaction();
+        if (auto rsUIContext = surfaceNode->GetRSUIContext()) {
+            rsUIContext->GetRSTransaction()->FlushImplicitTransaction();
+        } else {
+            IMSA_HILOGE("SetPanelProperties rsUIContext is nullptr!");
+        }
     } else if (panelType_ == STATUS_BAR) {
         auto surfaceNo = window_->GetSurfaceNode();
         if (surfaceNo == nullptr) {
@@ -241,7 +245,11 @@ int32_t InputMethodPanel::SetPanelProperties()
             return ErrorCode::ERROR_OPERATE_PANEL;
         }
         surfaceNo->SetFrameGravity(Rosen::Gravity::TOP_LEFT);
-        Rosen::RSTransactionProxy::GetInstance()->FlushImplicitTransaction();
+        if (auto rsUIContext = surfaceNo->GetRSUIContext()) {
+            rsUIContext->GetRSTransaction()->FlushImplicitTransaction();
+        } else {
+            IMSA_HILOGE("SetPanelProperties rsUIContext is nullptr!");
+        }
         return ErrorCode::NO_ERROR;
     }
     if (!isScbEnable_) {
@@ -1235,7 +1243,11 @@ int32_t InputMethodPanel::ChangePanelFlag(PanelFlag panelFlag)
             return ErrorCode::ERROR_NULL_POINTER;
         }
         surfaceNode->SetFrameGravity(Rosen::Gravity::TOP_LEFT);
-        Rosen::RSTransactionProxy::GetInstance()->FlushImplicitTransaction();
+        if (auto rsUIContext = surfaceNode->GetRSUIContext()) {
+            rsUIContext->GetRSTransaction()->FlushImplicitTransaction();
+        } else {
+            IMSA_HILOGE("ChangePanelFlag rsUIContext is nullptr!");
+        }
     }
     if (!isScbEnable_) {
         auto ret = window_->SetWindowGravity(gravity, invalidGravityPercent);
