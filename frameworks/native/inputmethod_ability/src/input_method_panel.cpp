@@ -27,6 +27,7 @@
 #include "scene_board_judgement.h"
 #include "sys_cfg_parser.h"
 #include "ui/rs_surface_node.h"
+#include "ui/rs_ui_context.h"
 #include "color_parser.h"
 
 namespace OHOS {
