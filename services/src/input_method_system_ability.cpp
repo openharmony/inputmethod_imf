@@ -3182,7 +3182,8 @@ ErrCode InputMethodSystemAbility::GetCursorInfo(int32_t userId, CursorInfoInner 
         IMSA_HILOGE("%{public}d session is nullptr!", userId);
         return ErrorCode::ERROR_IMSA_USER_SESSION_NOT_FOUND;
     }
-    return session->GetCursorInfo(cursorInfo);
+    pid_t clientPid = IPCSkeleton::GetCallingPid();
+    return session->GetCursorInfo(cursorInfo, clientPid);
 }
 // LCOV_EXCL_STOP
 ErrCode InputMethodSystemAbility::ShowCurrentInput(uint64_t displayId, uint32_t type)

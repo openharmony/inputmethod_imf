@@ -15,6 +15,7 @@
 
 sequenceable input_method_property..OHOS.MiscServices.Property;
 sequenceable input_method_property..OHOS.MiscServices.SubProperty;
+sequenceable input_method_utils..OHOS.MiscServices.CursorInfoInner;
 sequenceable input_window_info..OHOS.MiscServices.InputWindowStatus;
 sequenceable input_window_info..OHOS.MiscServices.ImeWindowInfo;
 sequenceable OHOS.IRemoteObject;
@@ -29,4 +30,5 @@ interface OHOS.MiscServices.IInputClient {
     void NotifyInputStop();
     [oneway] void DeactivateClient();
     void OnImeMirrorStop([in] IRemoteObject object);
+    void GetCurrentCursorInfo([out] CursorInfoInner cursorInfo);
 }
