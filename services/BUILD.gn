@@ -30,6 +30,7 @@ config("inputmethod_services_native_config") {
     "${inputmethod_path}/services/adapter/focus_monitor/include",
     "${inputmethod_path}/services/adapter/ime_connection_manager/include",
     "${inputmethod_path}/services/adapter/keyboard/include",
+    "${inputmethod_path}/services/adapter/res_sched_adapter/include",
     "${inputmethod_path}/services/adapter/os_account_adapter/include",
     "${inputmethod_path}/services/adapter/samgr/include",
     "${inputmethod_path}/services/adapter/res_sched_adapter/include",

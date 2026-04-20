@@ -297,7 +297,9 @@ napi_value JsKeyboardPanelManager::SendPrivateCommand(napi_env env, napi_callbac
         PARAM_CHECK_RETURN(env, argc > 0, "at least one parameter is required!", TYPE_NONE, napi_generic_failure);
         CHECK_RETURN(JsUtils::GetValue(env, argv[0], ctxt->privateCommand) == napi_ok,
             "commandData covert failed, type must be Record<string, CommandDataType>", napi_generic_failure);
-        if (!TextConfig::IsPrivateCommandValid(ctxt->privateCommand)) {
+        // Validate user-provided commands BEFORE adding sys_cmd field
+        // This ensures user commands comply with spec: max 5 commands, 32KB total size
+        if (!ImeSystemCmdChannel::IsUserPrivateCommandValid(ctxt->privateCommand)) {
             PARAM_CHECK_RETURN(env, false, "commandData size limit 32KB, count limit 5.", TYPE_NONE,
                 napi_generic_failure);
         }

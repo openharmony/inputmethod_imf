@@ -124,6 +124,8 @@ private:
     void WorkThread();
     int32_t OnHideKeyboardSelf(const Message *msg);
     void OnSysMemChanged();
+    int32_t OnSysImeImageCreated(const Message *msg);
+    int32_t OnMakeSysImeImage();
     int32_t GetCpuUsage();
     bool IsNeedSwitch(int32_t userId, const std::string &bundleName, const std::string &subName);
     int32_t CheckEnableAndSwitchPermission();
@@ -170,6 +172,7 @@ private:
     bool InitFocusChangedMonitor(int32_t userId);
     bool InitPasteboardMonitor();
     bool InitHaMonitor();
+    void SubscribeAppMgrService();
     bool InitWmsConnectionMonitor(int32_t userId);
     bool InitWindowDisplayChangedMonitor(int32_t userId);
     bool InitDisplayGroupMonitor(int32_t userId);
