@@ -2739,16 +2739,24 @@ void InputMethodPanel::OnVisibilityChange(bool isVisible)
 
 bool InputMethodPanel::IsValidParamWithConfig()
 {
+    if (!isAdjustInfoInitialized_.load()) {
+        int32_t ret = InitAdjustInfo();
+        if (ret != ErrorCode::NO_ERROR) {
+            IMSA_HILOGE("failed to init adjust info, ret: %{public}d", ret);
+            return false;
+        }
+    }
     bool isPortrait = IsDisplayPortrait();
     auto keys = GetScreenStatus(panelFlag_);
     auto styleKey = isPortrait ? std::get<1>(keys) : std::get<0>(keys);
+    std::lock_guard<std::mutex> lk(panelAdjustLock_);
     for (const auto &info : panelAdjust_) {
         if (IsVectorsEqual(info.first, styleKey)) {
             return !(info.second.top == 0 && info.second.left == 0 && info.second.right == 0
                 && info.second.bottom == 0);
         }
     }
-    return true;;
+    return false;
 }
 } // namespace MiscServices
 } // namespace OHOS

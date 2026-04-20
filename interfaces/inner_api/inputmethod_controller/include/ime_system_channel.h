@@ -84,6 +84,10 @@ public:
     IMF_API int32_t GetDefaultImeCfg(
         std::shared_ptr<Property> &property, int32_t userId = ImfCommonConst::DEFAULT_USER_ID);
     IMF_API bool IsSystemApp();
+    // Validate user-provided private commands (excluding system-added fields like 'sys_cmd')
+    // This ensures user commands comply with the spec: max 5 commands, 32KB total size
+    IMF_API static bool IsUserPrivateCommandValid(
+        const std::unordered_map<std::string, PrivateDataValue> &privateCommand);
 
 private:
     ImeSystemCmdChannel();
