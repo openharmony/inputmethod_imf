@@ -205,7 +205,11 @@ int32_t InputMethodPanel::AdjustLayout(const Rosen::KeyboardLayoutParams &param,
         SetChangeY({ 0, 0 });
     }
     // The actual system panel height includes the gradient height, which may not be consistent with the cached value.
-    auto wmRet = window_->AdjustKeyboardLayout(paramTmp);
+    auto wmRet = WMError::WM_OK;
+    {
+        InputMethodSyncTrace tracer("InputMethodPanel_AdjustKeyboardLayout");
+        wmRet = window_->AdjustKeyboardLayout(paramTmp);
+    }
     if (wmRet != WMError::WM_OK) {
         IMSA_HILOGE("AdjustKeyboardLayout failed, wmError is %{public}d!", wmRet);
         return ErrorCode::ERROR_WINDOW_MANAGER;
