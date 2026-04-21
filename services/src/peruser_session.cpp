@@ -2453,6 +2453,7 @@ int32_t PerUserSession::InitRealImeData(sptr<AAFwk::IAbilityConnection> &connect
 {
     std::lock_guard<std::mutex> lock(realImeDataLock_);
     if (realImeData_ != nullptr) {
+        connection = realImeData_->connection;
         return ErrorCode::NO_ERROR;
     }
     auto imeData = std::make_shared<ImeData>(nullptr, nullptr, nullptr, -1);
