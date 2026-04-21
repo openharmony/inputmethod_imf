@@ -18,6 +18,7 @@
 
 #include "iinput_client.h"
 #include "input_client_stub.h"
+#include "input_method_utils.h"
 #include "iremote_object.h"
 #include "notify_service_impl.h"
 #include "on_input_stop_notify_proxy.h"
@@ -41,6 +42,7 @@ public:
     ErrCode NotifyInputStop() override;
     ErrCode DeactivateClient() override;
     ErrCode OnImeMirrorStop(const sptr<IRemoteObject> &object) override;
+    ErrCode GetCurrentCursorInfo(CursorInfoInner &cursorInfo) override;
 };
 }  // namespace MiscServices
 }  // namespace OHOS

@@ -1078,14 +1078,20 @@ int32_t PerUserSession::OnSetCoreAndAgent(const sptr<IInputMethodCore> &core, co
     return ErrorCode::NO_ERROR;
 }
 
-int32_t PerUserSession::GetCursorInfo(CursorInfoInner &cursorInfo)
+int32_t PerUserSession::GetCursorInfo(CursorInfoInner &cursorInfo, const pid_t clientPid)
 {
     auto [clientGroup, clientInfo] = GetCurrentClientBoundRealIme();
     if (clientInfo == nullptr) {
         IMSA_HILOGE("clientInfo is nullptr!");
         return ErrorCode::ERROR_CLIENT_NOT_FOUND;
     }
-    cursorInfo = InputMethodTools::GetInstance().CursorInfoToInner(clientInfo->config.cursorInfo);
+    if (clientPid != clientInfo->pid) {
+        auto ret = clientInfo->client->GetCurrentCursorInfo(cursorInfo);
+        if (ret != ErrorCode::NO_ERROR) {
+            IMSA_HILOGE("GetCurrentCursorInfo failed, ret: %{public}d", ret);
+            return ret;
+        }
+    }
     cursorInfo.displayId = clientInfo->config.inputAttribute.callingDisplayId;
     return ErrorCode::NO_ERROR;
 }

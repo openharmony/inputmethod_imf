@@ -18,6 +18,7 @@
 #include "input_client_stub.h"
 #include "ime_event_monitor_manager_impl.h"
 #include "input_method_controller.h"
+#include "input_method_tools.h"
 
 namespace OHOS {
 namespace MiscServices {
@@ -100,6 +101,20 @@ ErrCode InputClientServiceImpl::DeactivateClient()
     } else {
         IMSA_HILOGW("failed to get InputMethodController instance!");
     }
+    return ERR_OK;
+}
+
+ErrCode InputClientServiceImpl::GetCurrentCursorInfo(CursorInfoInner &cursorInfo)
+{
+    IMSA_HILOGD("InputClientServiceImpl::GetCurrentCursorInfo start.");
+    auto instance = InputMethodController::GetInstance();
+    if (instance == nullptr) {
+        IMSA_HILOGW("failed to get InputMethodController instance!");
+        return ErrorCode::ERROR_NULL_POINTER;
+    }
+    CursorInfo info = InputMethodTools::GetInstance().InnerToCursorInfo(cursorInfo);
+    instance->GetCurrentCursorInfo(info);
+    cursorInfo = InputMethodTools::GetInstance().CursorInfoToInner(info);
     return ERR_OK;
 }
 }  // namespace MiscServices
