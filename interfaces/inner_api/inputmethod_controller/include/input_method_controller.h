@@ -1070,6 +1070,8 @@ public:
     void HandleKeyEventResult(uint64_t cbId, bool consumeResult);
 
     IMF_API void SetImcInnerListener(const std::shared_ptr<ImcInnerListener> &imcInnerListener);
+
+    int32_t GetCurrentCursorInfo(CursorInfo &cursorInfo);
 private:
     friend class MockInputMethodSystemAbilityProxy;
     InputMethodController();
