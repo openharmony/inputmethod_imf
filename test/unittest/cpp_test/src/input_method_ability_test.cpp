@@ -1386,6 +1386,48 @@ HWTEST_F(InputMethodAbilityTest, testNotifyPanelStatusInfo_006, TestSize.Level0)
 }
 
 /**
+ * @tc.name: testNotifyPanelStatusInfo_007
+ * @tc.desc: NotifyPanelStatusInfo with FLG_CANDIDATE_COLUMN and inputType != VOICEKB_INPUT
+ * @tc.type: FUNC
+ * @tc.require:
+ * @tc.author: zsy
+ */
+HWTEST_F(InputMethodAbilityTest, testNotifyPanelStatusInfo_007, TestSize.Level0)
+{
+    IMSA_HILOGI("InputMethodAbility testNotifyPanelStatusInfo_007 START");
+    imc_->Attach(textListener_);
+
+    PanelInfo info;
+    info.panelType = SOFT_KEYBOARD;
+    info.panelFlag = FLG_CANDIDATE_COLUMN;
+    auto panel = std::make_shared<InputMethodPanel>();
+    AccessScope scope(currentImeTokenId_, currentImeUid_);
+    auto ret = inputMethodAbility_.CreatePanel(nullptr, info, panel);
+    EXPECT_EQ(ret, ErrorCode::NO_ERROR);
+
+    inputMethodAbility_.inputType_ = InputType::CAMERA_INPUT;
+
+    TextListener::ResetParam();
+    ret = inputMethodAbility_.ShowPanel(panel);
+    EXPECT_EQ(ret, ErrorCode::NO_ERROR);
+    PanelStatusInfo statusInfo;
+    statusInfo.panelInfo = info;
+    statusInfo.visible = true;
+    statusInfo.trigger = Trigger::IME_APP;
+    EXPECT_FALSE(TextListener::WaitNotifyPanelStatusInfoCallback(statusInfo));
+
+    inputMethodAbility_.inputType_ = InputType::VOICEKB_INPUT;
+    TextListener::ResetParam();
+    ret = inputMethodAbility_.ShowPanel(panel);
+    EXPECT_EQ(ret, ErrorCode::NO_ERROR);
+    EXPECT_TRUE(TextListener::WaitNotifyPanelStatusInfoCallback(statusInfo));
+
+    inputMethodAbility_.inputType_ = InputType::NONE;
+    ret = inputMethodAbility_.DestroyPanel(panel);
+    EXPECT_EQ(ret, ErrorCode::NO_ERROR);
+}
+
+/**
  * @tc.name: testNotifyKeyboardHeight_001
  * @tc.desc: NotifyKeyboardHeight SOFT_KEYBOARD  FLG_FIXED
  * @tc.type: FUNC

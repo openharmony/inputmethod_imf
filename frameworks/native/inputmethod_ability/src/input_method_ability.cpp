@@ -594,9 +594,9 @@ int32_t InputMethodAbility::ShowKeyboardImplWithoutLock(int32_t cmdId)
     return ErrorCode::NO_ERROR;
 }
 
-void InputMethodAbility::NotifyPanelStatusInfo(const PanelStatusInfo &info)
+void InputMethodAbility::NotifyPanelStatusInfo(PanelStatusInfo &info)
 {
-    // CANDIDATE_COLUMN not notify
+    // When panelFlag is CANDIDATE_COLUMN and inputType is not VOICEKB_INPUT, no need to notify.
     auto channel = GetInputDataChannelProxy();
     NotifyPanelStatusInfo(info, channel);
 }
@@ -1323,7 +1323,7 @@ int32_t InputMethodAbility::HideKeyboard(Trigger trigger, uint32_t sessionId)
         }
         auto flag = panel->GetPanelFlag();
         imeListener_->OnKeyboardStatus(false);
-        if (flag == FLG_CANDIDATE_COLUMN) {
+        if (flag == FLG_CANDIDATE_COLUMN && inputType_ != InputType::VOICEKB_INPUT) {
             IMSA_HILOGI("panel flag is candidate, no need to hide.");
             return ErrorCode::NO_ERROR;
         }
@@ -1677,10 +1677,11 @@ int32_t InputMethodAbility::GetCallingWindowInfo(CallingWindowInfo &windowInfo)
 }
 
 void InputMethodAbility::NotifyPanelStatusInfo(
-    const PanelStatusInfo &info, std::shared_ptr<InputDataChannelProxy> &channelProxy)
+    PanelStatusInfo &info, std::shared_ptr<InputDataChannelProxy> &channelProxy)
 {
-    // CANDIDATE_COLUMN not notify
-    if (info.panelInfo.panelFlag == PanelFlag::FLG_CANDIDATE_COLUMN) {
+    // When panelFlag is CANDIDATE_COLUMN and inputType is not VOICEKB_INPUT, no need to notify.
+    info.inputType = GetInputType();
+    if (info.panelInfo.panelFlag == PanelFlag::FLG_CANDIDATE_COLUMN && info.inputType != InputType::VOICEKB_INPUT) {
         return;
     }
     if (channelProxy != nullptr) {
