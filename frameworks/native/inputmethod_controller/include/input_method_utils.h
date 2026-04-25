@@ -203,8 +203,19 @@ enum Trigger : int32_t {
     IMF,
     END
 };
+
+enum class InputType : int32_t {
+    NONE = -1,
+    CAMERA_INPUT = 0,
+    SECURITY_INPUT,
+    VOICE_INPUT,
+    VOICEKB_INPUT,
+    END
+};
+
 struct PanelStatusInfo {
     PanelInfo panelInfo;
+    InputType inputType = InputType::NONE;
     bool visible { false };
     Trigger trigger { END };
     uint32_t sessionId { 0 };
@@ -217,6 +228,7 @@ struct PanelStatusInfo {
 
 struct PanelStatusInfoInner : public Parcelable {
     PanelInfo panelInfo;
+    InputType inputType = InputType::NONE;
     bool visible { false };
     Trigger trigger { END };
     uint32_t sessionId { 0 };
@@ -487,15 +499,6 @@ struct TextConfig {
         }
         return false;
     }
-};
-
-enum class InputType : int32_t {
-    NONE = -1,
-    CAMERA_INPUT = 0,
-    SECURITY_INPUT,
-    VOICE_INPUT,
-    VOICEKB_INPUT,
-    END
 };
 
 enum class SwitchTrigger : uint32_t {
