@@ -154,6 +154,7 @@ struct InputAttribute {
     CapitalizeMode capitalizeMode = CapitalizeMode::NONE;
     bool needAutoInputNumkey { false }; // number keys need to be automatically handled by imf
     ExtraConfig extraConfig = {};
+    bool consumeKeyEvents { false };
 
     bool GetSecurityFlag() const
     {
@@ -174,7 +175,8 @@ struct InputAttribute {
     bool operator==(const InputAttribute &info) const
     {
         return inputPattern == info.inputPattern && enterKeyType == info.enterKeyType &&
-            inputOption == info.inputOption && isTextPreviewSupported == info.isTextPreviewSupported;
+            inputOption == info.inputOption && isTextPreviewSupported == info.isTextPreviewSupported &&
+            consumeKeyEvents == info.consumeKeyEvents;
     }
 
     inline std::string ToString() const
@@ -185,7 +187,7 @@ struct InputAttribute {
         << "isTextPreviewSupported:" << isTextPreviewSupported << "bundleName:" << bundleName
         << "immersiveMode:" << immersiveMode << "windowId:" << windowId
         << "callingDisplayId:" << callingDisplayId
-        << "needNumInput: " << needAutoInputNumkey
+        << "needNumInput: " << needAutoInputNumkey << "consumeKeyEvents: " << consumeKeyEvents
         << "extraConfig.customSettings.size: " << extraConfig.customSettings.size()
         << "]";
         return ss.str();
@@ -199,6 +201,7 @@ struct InputAttribute {
                     + std::to_string(callingDisplayId) + "/" + std::to_string(displayGroupId));
         info.append(" textPreview/immersiveMode:" + std::to_string(static_cast<int32_t>(isTextPreviewSupported)) + "/"
                     + std::to_string(immersiveMode));
+        info.append(" consumeKeyEvents:" + std::to_string(static_cast<int32_t>(consumeKeyEvents)));
         return info;
     }
 };
@@ -226,6 +229,7 @@ struct InputAttributeInner : public Parcelable {
     CapitalizeMode capitalizeMode = CapitalizeMode::NONE;
     bool needAutoInputNumkey { false }; // number keys need to be automatically handled by imf
     ExtraConfigInner extraConfig;
+    bool consumeKeyEvents { false };
 
     bool ReadFromParcel(Parcel &in)
     {
@@ -255,6 +259,7 @@ struct InputAttributeInner : public Parcelable {
             return false;
         }
         extraConfig = *extraConfigInfo;
+        consumeKeyEvents = in.ReadBool();
         return true;
     }
 
@@ -298,6 +303,9 @@ struct InputAttributeInner : public Parcelable {
         if (!out.WriteParcelable(&extraConfig)) {
             return false;
         }
+        if (!out.WriteBool(consumeKeyEvents)) {
+            return false;
+        }
         return ret;
     }
 
@@ -314,7 +322,8 @@ struct InputAttributeInner : public Parcelable {
     bool operator==(const InputAttributeInner &info) const
     {
         return inputPattern == info.inputPattern && enterKeyType == info.enterKeyType &&
-            inputOption == info.inputOption && isTextPreviewSupported == info.isTextPreviewSupported;
+            inputOption == info.inputOption && isTextPreviewSupported == info.isTextPreviewSupported &&
+            consumeKeyEvents == info.consumeKeyEvents;
     }
 
     bool GetSecurityFlag() const

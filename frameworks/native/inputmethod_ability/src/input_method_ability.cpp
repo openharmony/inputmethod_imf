@@ -484,7 +484,8 @@ void InputMethodAbility::OnAttributeChange(InputAttribute attribute)
         IMSA_HILOGE("kdListener_ is nullptr!");
         return;
     }
-    IMSA_HILOGD("enterKeyType: %{public}d, inputPattern: %{public}d.", attribute.enterKeyType, attribute.inputPattern);
+    IMSA_HILOGD("enterKeyType: %{public}d, inputPattern: %{public}d, consumeKeyEvents: %{public}d.",
+        attribute.enterKeyType, attribute.inputPattern, attribute.consumeKeyEvents);
     attribute.bundleName = GetInputAttribute().bundleName;
     attribute.windowId = GetInputAttribute().windowId;
     attribute.callingDisplayId = GetInputAttribute().callingDisplayId;
