@@ -980,6 +980,9 @@ int32_t InputMethodController::OnConfigurationChange(Configuration info)
         std::lock_guard<std::mutex> lock(textConfigLock_);
         textConfig_.inputAttribute.enterKeyType = static_cast<int32_t>(info.GetEnterKeyType());
         textConfig_.inputAttribute.inputPattern = static_cast<int32_t>(info.GetTextInputType());
+        if (info.HasConsumeKeyEvents()) {
+            textConfig_.inputAttribute.consumeKeyEvents = info.GetConsumeKeyEvents();
+        }
         attribute = textConfig_.inputAttribute;
     }
     if (!IsEditable()) {
@@ -987,7 +990,8 @@ int32_t InputMethodController::OnConfigurationChange(Configuration info)
         return ErrorCode::ERROR_CLIENT_NOT_EDITABLE;
     }
     IMSA_HILOGI(
-        "IMC enterKeyType: %{public}d, textInputType: %{public}d.", attribute.enterKeyType, attribute.inputPattern);
+        "IMC enterKeyType: %{public}d, textInputType: %{public}d, consumeKeyEvents: %{public}d.",
+        attribute.enterKeyType, attribute.inputPattern, attribute.consumeKeyEvents);
     if (oldSecurityFlag != attribute.GetSecurityFlag()) {
         GetTextConfig(clientInfo_.config);
         std::vector<sptr<IRemoteObject>> agents;

@@ -115,9 +115,27 @@ public:
         textInputType = textType;
     }
 
+    bool GetConsumeKeyEvents() const
+    {
+        return consumeKeyEvents;
+    }
+
+    bool HasConsumeKeyEvents() const
+    {
+        return hasConsumeKeyEvents;
+    }
+
+    void SetConsumeKeyEvents(bool support)
+    {
+        consumeKeyEvents = support;
+        hasConsumeKeyEvents = true;
+    }
+
 private:
     EnterKeyType enterKeyType = EnterKeyType::UNSPECIFIED;
     TextInputType textInputType = TextInputType::TEXT;
+    bool consumeKeyEvents = false;
+    bool hasConsumeKeyEvents = false;
 };
 
 struct CursorInfo {
@@ -381,6 +399,7 @@ public:
         config.append(" cursor: " + std::to_string(cursorInfo.left) + "/" + std::to_string(cursorInfo.top) + "/" +
             std::to_string(cursorInfo.width) + "/" + std::to_string(cursorInfo.height) + "/" +
             std::to_string(cursorInfo.displayId));
+        config.append(" consumeKeyEvents:" + std::to_string(inputAttribute.consumeKeyEvents));
         return config;
     }
 };
@@ -415,6 +434,7 @@ public:
             " newRange: " + std::to_string(textSelection.newBegin) + "/" + std::to_string(textSelection.newEnd));
         config.append(" cursor: " + std::to_string(cursorInfo.left) + "/" + std::to_string(cursorInfo.top) + "/" +
             std::to_string(cursorInfo.width) + "/" + std::to_string(cursorInfo.height));
+        config.append(" consumeKeyEvents:" + std::to_string(inputAttribute.consumeKeyEvents));
         return config;
     }
 };
@@ -439,6 +459,7 @@ struct TextConfig {
         config.append(" range: " + std::to_string(range.start) + "/" + std::to_string(range.end));
         config.append(" cursor: " + std::to_string(cursorInfo.left) + "/" + std::to_string(cursorInfo.top) + "/" +
             std::to_string(cursorInfo.width) + "/" + std::to_string(cursorInfo.height));
+        config.append(" consumeKeyEvents:" + std::to_string(inputAttribute.consumeKeyEvents));
         return config;
     }
 
