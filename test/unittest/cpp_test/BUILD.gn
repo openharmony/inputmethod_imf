@@ -2149,3 +2149,48 @@ ohos_unittest("ImeEventListenerManagerTest") {
     "samgr:samgr_proxy",
   ]
 }
+
+ohos_unittest("ImeInfoInquirerTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "./inputmethod_blocklist.txt"
+  }
+  module_out_path = module_output_path
+
+  sources = [
+    "src/ime_info_inquirer_test.cpp",
+  ]
+
+  configs = [ ":module_private_config" ]
+
+  deps = [
+    "${inputmethod_path}/services/adapter/settings_data_provider:settings_data_static",
+    "${inputmethod_path}/services:inputmethod_service_static",
+    "${inputmethod_path}/interfaces/inner_api/inputmethod_controller:inputmethod_client",
+    "${inputmethod_path}/services:inputmethod_service",
+    "${inputmethod_path}/test/common:inputmethod_test_common",
+    "${inputmethod_path}/test/unittest/cpp_test/common:inputmethod_tdd_util",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_runtime:ability_context_native",
+    "ability_runtime:ability_manager",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
+    "cJSON:cjson",
+    "c_utils:utils",
+    "data_share:datashare_common",
+    "data_share:datashare_consumer",
+    "googletest:gtest_main",
+    "hilog:libhilog",
+    "input:libmmi-client",
+    "ipc:ipc_single",
+    "os_account:os_account_innerkits",
+    "samgr:samgr_proxy",
+    "window_manager:libwm",
+    "window_manager:libdm",
+  ]
+}
