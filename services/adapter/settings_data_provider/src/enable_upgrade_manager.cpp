@@ -15,6 +15,7 @@
 #include "enable_upgrade_manager.h"
 
 #include "file_operator.h"
+#include "parse_userid_int.h"
 #include "ime_info_inquirer.h"
 #include "os_account_adapter.h"
 #include "parameter.h"
@@ -280,7 +281,12 @@ int32_t EnableUpgradeManager::GetGlobalTableUserId(const std::string &valueStr)
     }
     std::string userId = subNode->child->string;
     cJSON_Delete(root);
-    return atoi(userId.c_str());
+    int32_t parsed = 0;
+    if (!ParseUserIdInt32(userId, parsed)) {
+        IMSA_HILOGE("Invalid global table userId: %{public}s", userId.c_str());
+        return -1;
+    }
+    return parsed;
 }
 
 std::string EnableUpgradeManager::GenerateGlobalContent(int32_t userId, const std::vector<std::string> &bundleNames)
